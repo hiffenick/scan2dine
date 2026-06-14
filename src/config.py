@@ -1,5 +1,5 @@
 import os
-from redis import Redis
+# from redis import Redis
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from datetime import timedelta
@@ -29,36 +29,12 @@ class Config:
     # SECURITY
     # ==============================
     SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-fixed-key")
-
+    SESSION_TYPE = "filesystem"
     SESSION_COOKIE_SECURE = False        # True in production with HTTPS
     SESSION_COOKIE_HTTPONLY = True       # Prevent JS access
     SESSION_COOKIE_SAMESITE = "Lax"      # CSRF protection
 
-
-    # ==============================
-    # REDIS CONFIGURATION
-    # ==============================
-    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-    REDIS_DB = 0
-
-    REDIS_CLIENT = Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB,
-        decode_responses=False  # IMPORTANT: Keep False for Flask-Session
-    )
-
-
-    # ==============================
-    # SESSION CONFIGURATION (Flask-Session)
-    # ==============================
-    SESSION_TYPE = "redis"
-    SESSION_REDIS = REDIS_CLIENT
-    SESSION_PERMANENT = False
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
-    SESSION_REFRESH_EACH_REQUEST = True
-
+   
     # UPI / Payment configuration (used for generating UPI QR for online payments)
     UPI_VPA = os.getenv("UPI_VPA", "merchant@upi")
     UPI_MERCHANT_NAME = os.getenv("UPI_MERCHANT_NAME", "Cafe")

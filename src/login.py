@@ -14,22 +14,31 @@ login_route = Blueprint('login', __name__)
 
 
 @login_route.route('/login', methods=['GET', 'POST'])
-@no_cache
 def login():
-    """
-    Login route - handles both GET (display form) and POST (process login)
-    Flow:
-    1. User enters username and password
-    2. If credentials valid:
-       - If 2FA not enabled: redirect to setup page
-       - If 2FA enabled: redirect to 2FA verification
-    """
+
     form = LoginForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
-        return handle_login_submission(form)
+    if form.validate_on_submit():
 
-    return render_template('index.html', form=form)
+        user = User.query.filter_by(
+            name=form.username.data.strip()
+        ).first()
+
+        if not user:
+            flash("Invalid username or password")
+            return render_template("index.html", form=form)
+
+        if not UserService.verify_password(user, form.password.data):
+            flash("Invalid username or password")
+            return render_template("index.html", form=form)
+
+        # Store temporary user for 2FA
+        session.clear()
+        session["pending_user_id"] = user.id
+
+        return redirect(url_for("login.verify_2fa"))
+
+    return render_template("index.html", form=form)
 
 
 def handle_login_submission(form):
@@ -65,28 +74,42 @@ def handle_login_submission(form):
 
 
 @login_route.route('/verify-2fa', methods=['GET', 'POST'])
-@no_cache
 def verify_2fa():
+
     form = VerifyForm()
 
-    # Check if user is in the login flow
-    user_id = SessionManager.get_pre_2fa_user_id(session)
-    if not user_id:
-        return redirect(url_for('login.login'))
+    if request.method == "POST":
 
-    user = UserService.get_user_by_id(user_id)
+        code = form.verify_code.data
 
-    if not user or not user.totp_enable:
-        SessionManager.clear_session(session)
-        return redirect(url_for('login.login'))
+        user = User.query.get(session.get("pending_user_id"))
 
-    # If user submitted form
-    if form.validate_on_submit():
-        return handle_2fa_verification(user, form)
+        if not user:
+            return redirect(url_for("login.login"))
 
-    # GET request - show verification page
-    return render_template('verify_2fa.html', form=form)
+        totp = pyotp.TOTP(user.totp_secret)
 
+        if totp.verify(code):
+
+            session["user_id"] = user.id
+            session["logged_in"] = True
+
+            session.pop("pending_user_id", None)
+
+            print("VERIFY SESSION:")
+            print(dict(session))
+
+            return redirect(url_for("admin.admin_dashboard"))
+
+        flash("Invalid Code")
+
+        print("VERIFY SESSION:")
+        print(dict(session))
+
+    return render_template(
+        "verify_2fa.html",
+        form=form
+    )
 
 def handle_2fa_verification(user, form):
     """
@@ -97,9 +120,19 @@ def handle_2fa_verification(user, form):
     if not verify_code or len(verify_code) != 6:
         flash('Please enter a valid 6-digit code', 'error')
         return render_template('verify_2fa.html', form=form)
+    
 
     # Verify the TOTP code
     totp = pyotp.TOTP(user.totp_secret)
+
+    if totp.verify(verify_code, valid_window=1):
+
+        SessionManager.create_user_session(session, user)
+
+        print("LOGIN SUCCESS")
+        print(dict(session))
+
+        return redirect(url_for("admin.admin_dashboard"))
 
     # Allow for time drift (±30 seconds)
     if totp.verify(verify_code, valid_window=1):

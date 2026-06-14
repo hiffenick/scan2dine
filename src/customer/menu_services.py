@@ -2,7 +2,7 @@ import uuid
 from flask import Blueprint, jsonify, render_template, request, session, redirect, url_for
 from src.models.menu import MenuItem
 from src.models.order import Order
-from src.extensions import db, csrf, redis_client
+from src.extensions import db, csrf
 from datetime import datetime
 import json
 from src.services.menu_service import get_menu_items, get_active_menu_items
