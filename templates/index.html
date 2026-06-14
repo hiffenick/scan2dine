@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="loginpage">
+    <div class="login-container">
+    <h2>Cafe Admin</h2>
+
+    <form method="POST" action="{{ url_for('login.login') }}">
+        {{ form.hidden_tag() }}
+        {{ form.username(class="form-control", placeholder="Username") }}
+        {% for error in form.username.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+        {{ form.password(class="form-control", placeholder="Password") }}
+        {% for error in form.password.errors %}
+            <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+
+        <div class="button-group">
+            {{ form.submit(class="btn", value="Login") }}
+
+            <!-- Clean, safe redirect -->
+            <a href="{{ url_for('signup.signup') }}" class="signup-link">
+                Sign Up
+            </a>
+        </div>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="footer">
+        &copy; 2026 Cozy Cafe
+    </div>
+    </div>
+</div>
+{% endblock content %}

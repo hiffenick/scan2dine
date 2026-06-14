@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kans Resto | My Orders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #eef3ec;
+            --bg-accent: #dfe8e2;
+            --card-bg: #fffdf9;
+            --accent: #8fae9b;
+            --accent-strong: #6f927f;
+            --text-main: #2f3a34;
+            --text-muted: #6b776f;
+            --shadow-premium: 0 20px 50px rgba(47, 58, 52, 0.15);
+            --shadow-card: 0 4px 12px rgba(47, 58, 52, 0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body {
+            background: radial-gradient(circle at top, var(--bg-accent), var(--bg-main));
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+        .phone-container {
+            width: 100%;
+            max-width: 400px;
+            height: calc(100vh - 20px);
+            max-height: 750px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 6px solid white;
+        }
+        .scroll-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            padding-bottom: 20px;
+        }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 1.3rem;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: var(--bg-accent); }
+        h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--text-main); }
+        .table-badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .order-card {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid #f0f3f1;
+            box-shadow: var(--shadow-card);
+            animation: fadeInUp 0.4s ease backwards;
+        }
+        .order-card:nth-child(2) { animation-delay: 0.05s; }
+        .order-card:nth-child(3) { animation-delay: 0.1s; }
+        .order-card:nth-child(4) { animation-delay: 0.15s; }
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .order-id {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+        .order-status {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #fff3e0; color: #e67e22; }
+        .status-completed { background: #e8f5e9; color: #27ae60; }
+        .status-cancelled { background: #fdecea; color: #e74c3c; }
+        .order-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .order-total {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-strong);
+        }
+        .order-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e8ede9;
+        }
+        .view-btn {
+            background: var(--text-main);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .view-btn:hover { background: var(--accent-strong); }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-icon { font-size: 3.5rem; margin-bottom: 12px; opacity: 0.3; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+<div class="phone-container">
+    <div class="scroll-content">
+        <div class="header">
+            <a href="{{ url_for('customer_menu.explore_menu') }}" class="back-btn">←</a>
+            <h1>My Orders</h1>
+            <span class="table-badge">Table {{ table_no }}</span>
+        </div>
+
+        {% if orders %}
+            {% for order in orders %}
+            <div class="order-card">
+                <div class="order-top">
+                    <span class="order-id">Order #{{ order.id }}</span>
+                    <span class="order-status status-{{ order.status | lower }}">{{ order.status }}</span>
+                </div>
+                <div class="order-meta">
+                    {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                    &nbsp;·&nbsp; {{ order.customer_name }}
+                </div>
+                <div class="order-bottom">
+                    <span class="order-total">₹{{ "%.2f" | format(order.total_amount) }}</span>
+                    <a href="/customer/api/confirmation?order_id={{ order.id }}" class="view-btn">View Bill →</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🧾</div>
+                <p>No orders yet</p>
+                <p style="font-size:0.85rem; margin-top:5px;">Your orders will appear here</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

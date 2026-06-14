@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container setup-container">
+        <h2>Security Setup</h2>
+        
+        <div class="setup-content">
+            <!-- Tab Navigation -->
+            <div class="setup-tabs">
+                <button class="setup-tab-btn active" data-tab="qr-code">
+                    <span class="tab-icon">📱</span>
+                    Authenticator
+                </button>
+                <button class="setup-tab-btn" data-tab="google-auth">
+                    <span class="tab-icon">🔐</span>
+                    Google Auth
+                </button>
+            </div>
+
+            <!-- QR Code Tab -->
+            <div id="qr-code" class="setup-tab-content active">
+                <div class="setup-step">
+                    <h3>Step 1: Scan QR Code</h3>
+                    <p class="setup-description">
+                        Use an authenticator app (Google Authenticator, Microsoft Authenticator, etc.) to scan this QR code:
+                    </p>
+                    
+                    <div class="qr-code-container">
+                        <div id="qrcode" class="qr-placeholder">
+                            {% if qr_code_url %}
+                                <img id="qr-image" src="{{ qr_code_url }}" alt="QR Code" class="qr-image">
+                            {% else %}
+                                <div class="qr-error">Failed to generate QR code</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="manual-entry">
+                        <p class="manual-label">Can't scan?</p>
+                        <p class="manual-key">{{ secret_key }}</p>
+                        <button type="button" class="copy-btn" onclick="copyToClipboard('{{ secret_key }}')" aria-label="Copy secret key to clipboard">
+                            📋 Copy Key
+                        </button>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <h3>Step 2: Verify Code</h3>
+                    <p class="setup-description">
+                        Enter the 6-digit code from your authenticator app:
+                    </p>
+                    
+                    <form method="POST" class="verify-form">
+                        {{ form.hidden_tag() }} <!-- CSRF token -->
+
+                        <div class="code-input-group">
+                            <input 
+                                type="text" 
+                                id="verify-code" 
+                                name="verify_code" 
+                                placeholder="000000" 
+                                maxlength="6" 
+                                inputmode="numeric"
+                                pattern="\d{6}"
+                                class="code-input"
+                                required
+                                aria-label="Enter 6-digit authenticator code"
+                            >
+                        </div>
+                        
+                        {% if error %}
+                            <div class="text-danger small setup-error">{{ error }}</div>
+                        {% endif %}
+                        
+                        <div class="button-group">
+                            <button type="submit" class="btn verify-btn">Verify & Save</button>
+                            <a href="{{ url_for('setup.setup') }}" class="signup-link" onclick="return confirm('Skip 2FA setup for now? You can enable it later.')">
+                                Skip for Now
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Google Auth Tab -->
+            <div id="google-auth" class="setup-tab-content">
+                <div class="setup-step">
+                    <h3>Enable Google Authentication</h3>
+                    <p class="setup-description">
+                        Enhance your account security by connecting your Google account for two-factor authentication.
+                    </p>
+                    
+                    <div class="google-auth-info">
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>Quick and secure login with Google</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>No need to remember additional passwords</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-icon">✓</span>
+                            <span>Two-factor authentication enabled</span>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('setup.setup') }}">
+                        {{ form.hidden_tag() }} <!-- CSRF token -->
+                        <div class="button-group" style="flex-direction: column; gap: 10px;">
+                            <button type="submit" class="google-auth-btn">
+                                <svg width="20" height="20" viewBox="0 0 20 20" style="display: inline; margin-right: 8px; vertical-align: middle;">
+                                    <text x="2" y="16" font-size="14">G</text>
+                                </svg>
+                                Connect with Google
+                            </button>
+                            <a href="{{ url_for('admin.admin_dashboard') }}" class="signup-link" style="margin: 0;">
+                                Setup Later
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="security-note">
+                        <strong>🔒 Privacy Note:</strong> We only access your basic profile information and will never post on your behalf.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Cozy Cafe - Security Setup
+        </div>
+    </div>
+</div>
+
+<!-- Tab Switching JS -->
+<script>
+document.querySelectorAll('.setup-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.setup-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.setup-tab-content').forEach(tab => tab.classList.remove('active'));
+
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+</script>
+
+<!-- Copy to Clipboard JS -->
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => alert('Secret key copied to clipboard!'))
+        .catch(() => alert('Failed to copy key.'));
+}
+</script>
+
+{% endblock content %}

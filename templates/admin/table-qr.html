@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table {{ table_number }} - QR Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .qr-header {
+            margin-bottom: 30px;
+        }
+
+        .cafe-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 10px;
+        }
+
+        .table-label {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .table-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 10px;
+        }
+
+        .qr-code-wrapper {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 2px dashed #8B4513;
+        }
+
+        .qr-code-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+
+        .instructions {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #333;
+            text-align: left;
+        }
+
+        .instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .button-group {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-print {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background-color: #1a252f;
+        }
+
+        .btn-download {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: #229954;
+        }
+
+        .btn-back {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .qr-list {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .qr-list-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 15px;
+        }
+
+        .qr-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .qr-item-info {
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .qr-item-time {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .qr-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-small-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-small-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-small-view {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-small-view:hover {
+            background-color: #2980b9;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .qr-container {
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .button-group {
+                display: none;
+            }
+
+            .footer {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .qr-container {
+                padding: 20px;
+            }
+
+            .cafe-name {
+                font-size: 20px;
+            }
+
+            .table-number {
+                font-size: 28px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="qr-container">
+        <div class="qr-header">
+            <div class="cafe-name">☕ Cozy Café</div>
+            <div class="table-label">Table Number</div>
+            <div class="table-number">#{{ table_number }}</div>
+        </div>
+
+        <div class="instructions">
+            <h4>📱 How to Order:</h4>
+            <ul>
+                <li>Scan this QR code with your phone</li>
+                <li>Browse the menu and add items</li>
+                <li>Enter your name and select payment</li>
+                <li>Place your order and wait for service</li>
+            </ul>
+        </div>
+
+        <div class="qr-code-wrapper">
+            <img src="{{ qr_code }}" alt="Table {{ table_number }} QR Code">
+        </div>
+
+        <div style="margin-top:12px; text-align:center;">
+            <div style="word-break:break-all; font-size:0.9rem; color:#333; margin-bottom:8px;">Customer URL:</div>
+            <div id="qrUrl" style="background:#f7f7f7; padding:10px; border-radius:6px; font-size:0.85rem;">{{ qr_url }}</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn btn-download" onclick="openCustomer()">Open customer view</button>
+                <button class="btn btn-print" onclick="copyLink()">Copy link</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Scan the QR code above to view the menu and place an order</p>
+            <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
+                <strong>⚠️ Important:</strong> Make sure your phone is connected to the same WiFi as this computer<br>
+                QR points to the network address detected at generation time
+            </p>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+            <button class="btn btn-download" onclick="downloadQR()">⬇️ Download</button>
+            <!-- <button class="btn btn-delete" onclick="deleteCurrentQR()">🗑️ Delete</button>
+            <button class="btn btn-back" onclick="history.back()">← Back</button> -->
+        </div>
+
+        <!-- <div class="qr-list" id="qrList" style="display: none;">
+            <div class="qr-list-title">📋 Stored QR Codes for Table #{{ table_number }}</div>
+            <div id="qrListContainer"></div>
+        </div> -->
+    </div>
+
+    <script>
+        // Store current QR ID if available
+        const currentQRId = '{{ request.args.get("qr_id", "") }}';
+        const tableNumber = {{ table_number }};
+
+        function downloadQR() {
+            const link = document.createElement('a');
+            link.href = '{{ qr_code }}';
+            link.download = 'table-{{ table_number }}-qr.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openCustomer() {
+            const url = document.getElementById('qrUrl').textContent.trim();
+            if (url) window.open(url, '_blank');
+        }
+
+        function copyLink() {
+            const url = document.getElementById('qrUrl').textContent.trim();
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard');
+            }).catch(() => {
+                prompt('Copy the link below', url);
+            });
+        }
+
+        // Delete current QR code
+        async function deleteCurrentQR() {
+            if (!currentQRId) {
+                alert('No QR ID available to delete');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this QR code?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/delete-qr/${currentQRId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('QR code deleted successfully');
+                    // Refresh the page
+                    window.location.href = `/admin/generate-table-qr/${tableNumber}`;
+                } else {
+                    alert('Failed to delete QR code: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting QR:', error);
+                alert('Error deleting QR code');
+            }
+        }
+
+        // Load and display stored QR codes
+        async function loadStoredQRCodes() {
+            try {
+                const response = await fetch(`/admin/api/list-qr/${tableNumber}`);
+                const data = await response.json();
+
+                if (data.success && data.qr_codes.length > 0) {
+                    const listDiv = document.getElementById('qrList');
+                    const container = document.getElementById('qrListContainer');
+                    
+                    let html = '';
+                    data.qr_codes.forEach(qr => {
+                        const createdAt = new Date(qr.created_at).toLocaleString();
+                        html += `
+                            <div class="qr-item">
+                                <div class="qr-item-info">
+                                    <div><strong>QR ID: ${qr.id}</strong></div>
+                                    <div class="qr-item-time">Created: ${createdAt}</div>
+                                </div>
+                                <div class="qr-item-actions">
+                                    <button class="btn-small btn-small-view" onclick="viewQR('${qr.qr_image_base64}')">View</button>
+                                    <button class="btn-small btn-small-delete" onclick="deleteQR(${qr.id})">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                    listDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading QR codes:', error);
+            }
+        }
+
+        // View QR code in modal
+        function viewQR(qrBase64) {
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                " onclick="this.remove()">
+                    <div style="
+                        background: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        text-align: center;
+                    ">
+                        <img src="data:image/png;base64,${qrBase64}" style="max-width: 300px;">
+                        <p style="margin-top: 10px; color: #999;">Click to close</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Delete specific QR code
+        async function deleteQR(qrId) {
+            if (!confirm('Are you sure you want to delete this QR code?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/delete-qr/${qrId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('QR code deleted successfully');
+                    // Reload the list
+                    loadStoredQRCodes();
+                } else {
+                    alert('Failed to delete QR code');
+                }
+            } catch (error) {
+                console.error('Error deleting QR:', error);
+                alert('Error deleting QR code');
+            }
+        }
+
+        // Load stored QRs on page load
+        window.addEventListener('load', loadStoredQRCodes);
+    </script>
+</body>
+</html>

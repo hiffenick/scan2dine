@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container setup-container">
+        <h2>Two-Factor Authentication</h2>
+        
+        <div class="verify-2fa-content">
+            <p class="verify-description">
+                Your account is protected with 2FA. Please enter the 6-digit code from your authenticator app to continue.
+            </p>
+
+            <form method="POST" class="verify-form">
+                
+                {{ form.hidden_tag() }}
+                <div class="code-input-group">
+                    <label for="verify-code" style="display: block; text-align: left; margin-bottom: 8px; color: #ffeb3b; font-size: 13px;">
+                        6-Digit Code
+                    </label>
+                    <input 
+                        type="text" 
+                        id="verify-code" 
+                        name="verify_code" 
+                        placeholder="000000" 
+                        maxlength="6" 
+                        inputmode="numeric"
+                        class="code-input"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                {% if message %}
+                    <div class="alert alert-info" style="margin-bottom: 15px;">{{ message }}</div>
+                {% endif %}
+
+                <div class="button-group" style="flex-direction: column; gap: 10px;">
+                    <button type="submit" class="btn verify-btn" style="width: 100%; margin: 0;">
+                        ✓ Verify Code
+                    </button>
+                    <a href="{{ url_for('login.login') }}" class="signup-link" style="margin: 0; text-align: center; display: block;">
+                        Back to Login
+                    </a>
+                </div>
+            </form>
+
+            <div class="help-section">
+                <p style="color: #ffeb3b; font-weight: bold; margin: 0 0 8px 0; font-size: 12px;">💡 Authenticator Apps</p>
+                <p style="color: #bbb; margin: 0; font-size: 12px; line-height: 1.4;">
+                    Use apps like Google Authenticator, Microsoft Authenticator, Authy, or FreeOTP to generate codes.
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Cozy Cafe - Secure Login
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Override to ensure proper centering and scrollability */
+    .login-page {
+        overflow-y: auto !important;
+        padding: 20px;
+    }
+
+    .setup-container {
+        width: 100%;
+        max-width: 360px;
+        max-height: 85vh;
+        opacity: 1 !important;
+        transform: none !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .verify-2fa-content {
+        margin-top: 15px;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 5px;
+    }
+
+    /* Keep buttons and footer sticky at bottom */
+    .verify-form {
+        margin-bottom: 0;
+    }
+
+    .button-group {
+        position: sticky;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        padding: 15px 0 0 0;
+        margin-top: 15px;
+        border-top: 1px solid rgba(255, 235, 59, 0.1);
+    }
+
+    .footer {
+        position: sticky;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        padding: 10px 0 0 0;
+    }
+
+    .verify-description {
+        font-size: 13px;
+        color: #bbb;
+        margin: 0 0 20px 0;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .code-input {
+        font-family: 'Courier New', monospace;
+    }
+
+    .code-input::placeholder {
+        color: rgba(255, 235, 59, 0.5);
+        letter-spacing: 8px;
+    }
+
+    .help-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255, 235, 59, 0.05);
+        border-left: 3px solid #ffeb3b;
+        border-radius: 4px;
+    }
+
+    .help-section p:first-child {
+        margin-top: 0;
+    }
+
+    .help-section p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Scrollbar styling for verify content */
+    .verify-2fa-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .verify-2fa-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    .verify-2fa-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 235, 59, 0.3);
+        border-radius: 3px;
+    }
+
+    .verify-2fa-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 235, 59, 0.5);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 480px) {
+        .login-page {
+            padding: 15px;
+        }
+
+        .setup-container {
+            padding: 25px 20px;
+            width: 100%;
+        }
+
+        .code-input {
+            font-size: 20px;
+            letter-spacing: 6px;
+            padding: 12px;
+        }
+
+        .code-input::placeholder {
+            letter-spacing: 6px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        .verify-description {
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .setup-container {
+            padding: 20px 15px;
+        }
+
+        .code-input {
+            font-size: 18px;
+            letter-spacing: 5px;
+        }
+
+        .code-input::placeholder {
+            letter-spacing: 5px;
+        }
+
+        .help-section {
+            padding: 12px;
+        }
+    }
+
+    /* Ensure proper height on small screens */
+    @media (max-height: 600px) {
+        .login-page {
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+    }
+</style>
+
+<script>
+    // Format code input (remove spaces and limit to numbers)
+    const codeInput = document.getElementById('verify-code');
+    if (codeInput) {
+        codeInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+        });
+
+        // Auto-submit when 6 digits are entered
+        codeInput.addEventListener('keyup', function(e) {
+            if (this.value.length === 6) {
+                // Optionally auto-submit or show ready state
+                console.log('6-digit code ready');
+            }
+        });
+
+        // Focus on load
+        codeInput.focus();
+    }
+</script>
+{% endblock content %}

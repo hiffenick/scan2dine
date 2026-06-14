@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .confirmation-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            color: #27ae60;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .order-details {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #8B4513;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .items-list {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .items-list h3 {
+            color: #8B4513;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .item-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-entry:last-child {
+            border-bottom: none;
+        }
+
+        .item-qty {
+            color: #666;
+        }
+
+        .item-subtotal {
+            font-weight: bold;
+            color: #8B4513;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .total-label {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .order-id {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .order-id-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .order-id-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B4513;
+        }
+
+        .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #333;
+            margin: 8px 0;
+        }
+
+        .info-box strong {
+            color: #2c3e50;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        @media (min-width: 768px) {
+            .confirmation-container {
+                padding: 60px;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .total-amount {
+                font-size: 42px;
+            }
+        }
+
+        .qr-section {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .qr-section p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmation-container">
+        <div class="success-icon">✅</div>
+        
+        <h1>Order Confirmed!</h1>
+        <p class="subtitle">Your order has been successfully placed</p>
+
+        <!-- Order ID -->
+        <div class="order-id">
+            <div class="order-id-label">Order ID</div>
+            <div class="order-id-value">#{{ order.id }}</div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="order-details">
+            <div class="detail-row">
+                <span class="detail-label">📍 Table</span>
+                <span class="detail-value">{{ order.table_no }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">👤 Name</span>
+                <span class="detail-value">{{ order.customer_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">💳 Payment</span>
+                <span class="detail-value">
+                    {% if order.payment_method == 'online' %}
+                        🏦 Online
+                    {% else %}
+                        💵 Cash
+                    {% endif %}
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">📅 Time</span>
+                <span class="detail-value">{{ order.created_at.strftime('%H:%M') }}</span>
+            </div>
+        </div>
+
+        <!-- Items Ordered -->
+        <div class="items-list">
+            <h3>📋 Items Ordered</h3>
+            {% for item in items %}
+            <div class="item-entry">
+                <span>
+                    {{ item.name }} <span class="item-qty">x{{ item.quantity }}</span>
+                </span>
+                <span class="item-subtotal">₹{{ (item.price * item.quantity) | round(2) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Total -->
+        <div class="total-section">
+            <div class="total-label">Total Amount</div>
+            <div class="total-amount">₹{{ order.total_amount | round(2) }}</div>
+        </div>
+
+        <!-- Status -->
+        <div class="info-box">
+            <p><strong>Order Status:</strong></p>
+            {% if order.status == 'Pending' %}
+                <div class="status-badge" style="background:#fff3cd; color:#856404;">🕐 Pending — Awaiting Payment</div>
+            {% elif order.status == 'Completed' %}
+                <div class="status-badge" style="background:#d4edda; color:#155724;">✅ Completed — Payment Received</div>
+            {% elif order.status == 'Cancelled' %}
+                <div class="status-badge" style="background:#f8d7da; color:#721c24;">❌ Cancelled</div>
+            {% endif %}
+        </div>
+
+        <!-- Info -->
+        <div class="info-box">
+            <p><strong>What's next?</strong></p>
+            <p>✓ Your order has been sent to the kitchen</p>
+            <p>✓ Our staff will notify you when it's ready</p>
+            <p>✓ Estimated time: 15-20 minutes</p>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <a href="/menu/explore" class="btn btn-primary" style="text-decoration: none;">
+                🛒 Continue Shopping
+            </a>
+            <button class="btn btn-secondary" onclick="window.print()">
+                🖨️ Print Receipt
+            </button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-page">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2>☕ Cozy Cafe</h2>
+            <p>Admin Panel</p>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="/admin#dashboard" class="menu-item">📊 Dashboard</a>
+            <a href="/admin#menu" class="menu-item">📋 Menu</a>
+            <a href="/admin#orders" class="menu-item active">🛒 Orders</a>
+            <a href="/admin#tables" class="menu-item">🪑 Tables</a>
+            <a href="/menu" class="menu-item">🍽️ Go to Menu</a>
+            <a href="/logout" class="menu-item logout">🚪 Logout</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <h1>Create New Order</h1>
+        </header>
+
+        <div id="orderModal" class="modal-overlay show">
+            <div class="modal-content">
+                <span class="close-btn" onclick="goBack()">×</span>
+
+                <h2>🧾 New Order</h2>
+
+                <div class="order-meta">
+                    <div class="input-group">
+                        <input type="text" id="customer-name" placeholder="Enter customer name" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="table-number" placeholder="Enter table number" min="1" required>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th width="80">Qty</th>
+                                <th width="100">Price</th>
+                                <th width="30"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center; color:#999;">
+                                    No items added yet. Click "Add Item" below.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn-secondary" onclick="addOrderItem()">➕ Add Item</button>
+
+                <div class="input-group status-container">
+                    <input type="text" id="order-status-input" readonly
+                           data-status="pending"
+                           value="Pending"
+                           onclick="toggleStatusDropdown()">
+                    <div id="status-dropdown" class="status-dropdown">
+                        <div onclick="pickStatus('pending')">Pending</div>
+                        <div onclick="pickStatus('completed')">Completed</div>
+                        <div onclick="pickStatus('cancelled')">Cancelled</div>
+                    </div>
+                </div>
+
+                <div class="order-total">
+                    Total: ₹<span id="order-total">0.00</span>
+                </div>
+
+                <button class="btn-create" onclick="submitCreateOrder()">Create Order</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+.admin-page { display:flex;height:100vh;background:#f5f5f5; }
+.admin-sidebar { width:250px;background:linear-gradient(135deg,#8B4513,#A0522D);color:#fff;padding:20px; }
+.menu-item { display:block;padding:10px;color:white;text-decoration:none;border-radius:6px;margin-bottom:5px; }
+.menu-item.active,.menu-item:hover { background:rgba(255,255,255,0.2); }
+.admin-main { flex:1;padding:30px;overflow-y:auto; }
+
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;justify-content:center;align-items:center;z-index:1000;padding:20px; }
+.modal-content { background:#fff;width:100%;max-width:850px;padding:25px;border-radius:12px;position:relative;max-height:90vh;overflow-y:auto; }
+
+.close-btn { position:absolute;top:10px;right:15px;font-size:24px;cursor:pointer; }
+
+.order-meta { display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px; }
+.input-group input { padding:10px;border:1px solid #ccc;border-radius:6px;font-size:14px;width:100%; }
+
+.orders-table { width:100%;border-collapse:collapse;min-width:500px; }
+.orders-table th,.orders-table td { padding:10px;border-bottom:1px solid #ddd;position:relative; }
+.orders-table th { background:#f8f8f8; }
+
+.search-select { width:100%;padding:6px;font-size:14px; }
+.qty-input { width:60px;padding:6px;font-size:14px; }
+
+.menu-dropdown {
+    position:absolute;
+    top:100%;
+    left:0;
+    width:100%;
+    margin-top:4px;
+    display:none;
+    background:#fff;
+    border:1px solid #ccc;
+    z-index:1200;
+    max-height:200px;
+    overflow-y:auto;
+}
+
+.btn-secondary { margin-top:10px;background:#8B4513;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer; }
+.btn-create { margin-top:25px;background:#228B22;color:#fff;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;width:100%;font-weight:bold;font-size:16px; }
+
+.order-total { margin-top:20px;font-size:1.2em;text-align:right;font-weight:bold; }
+.delete-btn { background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px; }
+
+.status-container { position:relative;margin-top:20px;max-width:250px; }
+.status-dropdown { display:none;position:absolute;top:100%;left:0;width:100%;background:#fff;border:1px solid #ddd;z-index:1000; }
+.status-dropdown div { padding:10px;cursor:pointer; }
+.status-dropdown div:hover { background:#f8f1ed;color:#8B4513; }
+</style>
+
+<script>
+let menuItems = [];
+let menuLoaded = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+    fetchMenu().then(() => {
+        // Load pre-selected items from sessionStorage (from cart)
+        const preSelected = sessionStorage.getItem('preSelectedItems');
+        if (preSelected) {
+            const items = JSON.parse(preSelected);
+            sessionStorage.removeItem('preSelectedItems'); // Clear after reading
+            
+            console.log('Pre-selected items from cart:', items);
+            
+            // Add each item to the order
+            items.forEach(item => {
+                if (item.id) {
+                    addRowWithItem(item.id, item.name, item.price);
+                }
+            });
+        }
+    });
+});
+
+function goBack() {
+    window.location.href = "/admin#orders";
+}
+
+function fetchMenu() {
+    return fetch("/admin/api/menu")
+        .then(res => res.json())
+        .then(data => {
+            menuItems = data;
+            menuLoaded = true;
+        });
+}
+
+function addOrderItem() {
+    if (!menuLoaded) {
+        fetchMenu().then(addRow);
+    } else {
+        addRow();
+    }
+}
+
+function addRow() {
+    const tbody = document.getElementById("items-body");
+
+    if (tbody.children.length === 1 && tbody.children[0].cells.length === 1) {
+        tbody.innerHTML = "";
+    }
+
+    const row = document.createElement("tr");
+    row.dataset.unitPrice = 0;
+    row.dataset.menuItemId = "";
+
+    row.innerHTML = `
+        <td>
+            <input type="text" class="search-select" placeholder="Search menu items..."
+                   onclick="toggleDropdown(this)" oninput="filterMenu(this)">
+            <select class="menu-dropdown" size="5" onchange="menuPicked(this)">
+                ${menuItems.map(m =>
+                    `<option data-id="${m.id}" data-price="${m.price}">${m.name}</option>`
+                ).join("")}
+            </select>
+        </td>
+        <td><input type="number" class="qty-input" value="1" min="1" onchange="recalcRow(this)"></td>
+        <td>₹<span class="item-price">0.00</span></td>
+        <td><button class="delete-btn" onclick="deleteRow(this)">✖</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function addRowWithItem(itemId, itemName, itemPrice) {
+    const tbody = document.getElementById("items-body");
+
+    // Remove placeholder if exists
+    if (tbody.children.length === 1 && tbody.children[0].cells.length === 1) {
+        tbody.innerHTML = "";
+    }
+
+    const row = document.createElement("tr");
+    row.dataset.unitPrice = itemPrice;
+    row.dataset.menuItemId = itemId;
+
+    row.innerHTML = `
+        <td>
+            <input type="text" class="search-select" placeholder="Search menu items..."
+                   value="${itemName}"
+                   onclick="toggleDropdown(this)" oninput="filterMenu(this)">
+            <select class="menu-dropdown" size="5" onchange="menuPicked(this)">
+                ${menuItems.map(m =>
+                    `<option data-id="${m.id}" data-price="${m.price}" ${m.id == itemId ? 'selected' : ''}>${m.name}</option>`
+                ).join("")}
+            </select>
+        </td>
+        <td><input type="number" class="qty-input" value="1" min="1" onchange="recalcRow(this)"></td>
+        <td>₹<span class="item-price">${itemPrice}</span></td>
+        <td><button class="delete-btn" onclick="deleteRow(this)">✖</button></td>
+    `;
+    tbody.appendChild(row);
+    recalcRow(row.querySelector('.qty-input')); // Recalculate total
+}
+
+function toggleDropdown(input) {
+    document.querySelectorAll(".menu-dropdown").forEach(d => d.style.display="none");
+    input.nextElementSibling.style.display="block";
+}
+
+function filterMenu(input) {
+    const dropdown = input.nextElementSibling;
+    const q = input.value.toLowerCase();
+    dropdown.style.display="block";
+    Array.from(dropdown.options).forEach(o=>{
+        o.style.display = o.text.toLowerCase().includes(q) ? "block":"none";
+    });
+}
+
+function menuPicked(select) {
+    const row = select.closest("tr");
+    const opt = select.selectedOptions[0];
+    row.querySelector(".search-select").value = opt.text;
+    row.dataset.unitPrice = opt.dataset.price;
+    row.dataset.menuItemId = opt.dataset.id;
+    select.style.display="none";
+    recalcRow(select);
+}
+
+function recalcRow(el) {
+    const row = el.closest("tr");
+    const qty = row.querySelector(".qty-input").value;
+    const price = row.dataset.unitPrice || 0;
+    row.querySelector(".item-price").innerText = (qty * price).toFixed(2);
+    recalcTotal();
+}
+
+function recalcTotal() {
+    let total = 0;
+    document.querySelectorAll(".item-price").forEach(p => total += +p.innerText);
+    document.getElementById("order-total").innerText = total.toFixed(2);
+}
+
+function deleteRow(btn) {
+    btn.closest("tr").remove();
+    recalcTotal();
+}
+
+function toggleStatusDropdown() {
+    const d = document.getElementById("status-dropdown");
+    d.style.display = d.style.display === "block" ? "none" : "block";
+}
+
+function pickStatus(v) {
+    const i = document.getElementById("order-status-input");
+    i.value = v.charAt(0).toUpperCase()+v.slice(1);
+    i.dataset.status = v;
+    document.getElementById("status-dropdown").style.display="none";
+}
+
+function submitCreateOrder() {
+    const payload = {
+        customer_name: document.getElementById("customer-name").value.trim(),
+        table_no: Number(document.getElementById("table-number").value),
+        status: document.getElementById("order-status-input").dataset.status,
+        items: []
+    };
+
+    document.querySelectorAll("#items-body tr").forEach(row => {
+        if (row.dataset.menuItemId) {
+            payload.items.push({
+                menu_item_id: Number(row.dataset.menuItemId),
+                qty: Number(row.querySelector(".qty-input").value)
+            });
+        }
+    });
+
+    if (!payload.customer_name || !payload.table_no || !payload.items.length) {
+        alert("Please fill all details and add at least one item");
+        return;
+    }
+
+    fetch("/admin/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/admin#orders`;
+        } else {
+            alert(data.message || "Failed to create order");
+        }
+    });
+}
+</script>
+{% endblock %}

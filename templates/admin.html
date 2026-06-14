@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-page">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2>☕ Cozy Cafe</h2>
+            <p>Admin Panel</p>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="#dashboard" class="menu-item active" onclick="showSection('dashboard')">
+                <span class="menu-icon">📊</span>
+                <span class="menu-text">Dashboard</span>
+            </a>
+            <a href="#menu" class="menu-item" onclick="showSection('menu')">
+                <span class="menu-icon">📋</span>
+                <span class="menu-text">Menu</span>
+            </a>
+            <a href="#orders" class="menu-item" onclick="showSection('orders')">
+                <span class="menu-icon">🛒</span>
+                <span class="menu-text">Orders</span>
+            </a>
+            <a href="#tables" class="menu-item" onclick="showSection('tables')">
+                <span class="menu-icon">🪑</span>
+                <span class="menu-text">Tables & QR</span>
+            </a>
+            <a href="#profile" class="menu-item" onclick="showSection('profile')">
+                <span class="menu-icon">👤</span>
+                <span class="menu-text">Profile</span>
+            </a>
+            <a href="/admin/settings" class="menu-item">
+                <span class="menu-icon">💳</span>
+                <span class="menu-text">Payments / UPI</span>
+            </a>
+            <a href="/menu" class="menu-item">
+                <span class="menu-icon">🍽️</span>
+                <span class="menu-text">Go to Menu</span>
+            </a>
+            <a href="/logout" class="menu-item logout">
+                <span class="menu-icon">🚪</span>
+                <span class="menu-text">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <div class="mobile-header">
+                <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                <h1 class="mobile-title">Welcome, {{ user.name }}! 👋</h1>
+            </div>
+
+            <div class="desktop-header">
+                <h1>Welcome, {{ user.name }}! 👋</h1>
+                <div class="header-actions">
+                    <div class="header-info">
+                        <span class="info-badge">📧 {{ user.email }}</span>
+                        <span class="info-badge">✓ 2FA Enabled</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section id="dashboard" class="admin-section active">
+            <div class="section-title">📊 Dashboard</div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🍽️</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Orders</div>
+                        <div class="stat-value">{{ total_orders }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">₹</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Revenue Today</div>
+                        <div class="stat-value">₹{{ "%.2f"|format(revenue_today) }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Customers</div>
+                        <div class="stat-value">{{ total_customers }}</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <div class="stat-label">Rating</div>
+                        <div class="stat-value">4.8/5</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-box">
+                    <h3>📈 Recent Orders</h3>
+                    <div class="orders-list">
+                        {% if recent_orders %}
+                            {% for order in recent_orders %}
+                            <div class="order-item" onclick="goToOrderPage({{ order.id }})" style="cursor:pointer;">
+                                <span class="order-id">#{{ order.id }}</span>
+                                <span class="order-items" onclick="event.stopPropagation(); viewItems({{ order.id }})" style="cursor:pointer; text-decoration:underline; color:#3498db;">
+                                    {{ order.items | map(attribute='menu_item.item_name') | join(', ') }}
+                                </span>
+                                <span class="order-amount">₹{{ "%.2f"|format(order.total_amount) }}</span>
+                                <span class="order-status {{ order.status }}">{{ order.status | capitalize }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color: #888; padding: 12px 0;">No orders yet today.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="dashboard-box">
+                    <h3>🔔 Notifications</h3>
+                    <div class="notifications-list">
+                        <div class="notification">
+                            <span class="notification-icon">✅</span>
+                            <div>
+                                <div class="notification-title">2FA Setup Complete</div>
+                                <div class="notification-time">Just now</div>
+                            </div>
+                        </div>
+                        <div class="notification">
+                            <span class="notification-icon">🛒</span>
+                            <div>
+                                <div class="notification-title">New order received</div>
+                                <div class="notification-time">5 mins ago</div>
+                            </div>
+                        </div>
+                        <div class="notification">
+                            <span class="notification-icon">💬</span>
+                            <div>
+                                <div class="notification-title">Customer feedback</div>
+                                <div class="notification-time">1 hour ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="menu" class="admin-section">
+            <div class="section-title">📋 Menu Management</div>
+            
+            <div class="menu-management">
+                <div class="add-item-form">
+                    <h3>Add New Dish</h3>
+                    <form method="POST" action="{{ url_for('admin.add_menu_item') }}">
+                        {% for field, errors in form.errors.items() %}
+                            {% for error in errors %}
+                                <p style="color:red;">{{ error }}</p>
+                            {% endfor %}
+                        {% endfor %}
+                        {{ form.hidden_tag() }}
+                        <div class="form-row">
+                            {{ form.item_name }}
+                            {{ form.item_price}}
+                        </div>
+                        <div class="form-row">
+                            {{ form.category }}
+                            {{ form.description }}
+                        </div>
+                        {{ form.submit(class="btn-primary")}}
+                    </form>
+                </div>
+
+                <div class="menu-items-list">
+                    <h3>Current Menu Items</h3>
+                    <table class="menu-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for items in menu_items %}
+                                <tr>
+                                    <td>{{items.item_name}}</td>
+                                    <td>{{items.category}}</td>
+                                    <td>₹{{items.item_price}}</td>
+                                    <td>
+                                        <button class="btn-small edit"
+                                            onclick="openEditModal('{{ items.id }}','{{ items.item_name }}','{{ items.item_price }}','{{ items.category }}','{{ items.description }}')">
+                                            Edit
+                                        </button>
+                                        <form method="POST" action="{{ url_for('admin.delete_menu', item_id=items.id) }}" style="display:inline;">
+                                            {{ csrf_form.hidden_tag() }}
+                                            <button class="btn-small delete" type="submit" onclick="return confirm('Are you sure you want to delete this item?');">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="orders" class="admin-section">
+            <div class="section-title">🛒 Orders</div>
+
+            <div class="orders-management">
+                <!-- Filters + Add Order Button -->
+                <div class="filter-controls" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                    <select onchange="filterOrders(this.value)">
+                        <option value="">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                    </select>
+
+                    <!-- Add Order Button -->
+                    <a href="{{ url_for('admin.show_create_order') }}" class="add-order-btn">
+                        ➕ Add Order
+                    </a>
+                </div>
+
+                <div class="orders-table-container">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Table No</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-body"></tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div id="pagination" style="display:flex; justify-content:center; align-items:center; gap:6px; padding:16px 0 4px; flex-wrap:wrap;"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="tables" class="admin-section">
+            <div class="section-title">🪑 Table QR Generator</div>
+
+            <div class="tables-container" style="display:flex; gap:30px; flex-wrap:wrap;">
+
+                <!-- LEFT SIDE -->
+                <div class="table-generator" style="flex:1; min-width:280px;">
+                    <h3>📱 Generate Table QR</h3>
+                    <p class="description">Enter table number to generate its QR code</p>
+
+                    <div style="margin-bottom:15px;">
+                        <input 
+                            type="number"
+                            id="tableNumberInput"
+                            placeholder="Enter Table Number"
+                            min="1"
+                            max="100"
+                            required
+                            style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc;">
+                    </div>
+
+                    <button 
+                        type="button"
+                        class="btn-primary"
+                        onclick="generateTableQR()"
+                        style="width:100%; padding:14px; font-size:16px;">
+                        Generate QR
+                    </button>
+                </div>
+
+                <!-- RIGHT SIDE -->
+                <!-- RIGHT SIDE -->
+                <div class="qr-preview" style="flex:1; min-width:280px;">
+                    <h3>📋 Generated QR Codes</h3>
+
+                    <div id="qrContainer"
+                        style="margin-top:20px; display:none;">
+                    </div>
+                </div>
+
+
+            </div>
+        </section>
+
+
+
+        <section id="profile" class="admin-section">
+            <div class="section-title">👤 Profile Settings</div>
+            <div class="profile-container">
+                <div class="profile-info">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-details">
+                        <h3>{{ user.name }}</h3>
+                        <p>{{ user.email }}</p>
+                        <span class="security-badge">🔒 2FA Enabled</span>
+                    </div>
+                </div>
+                <div class="profile-form">
+                    <h3>Update Profile</h3>
+                    <form onsubmit="handleProfileUpdate(event)">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" value="{{ user.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" value="{{ user.email }}" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <div id="editModal" class="modal-overlay">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h2>📝 Edit Menu Item</h2>
+                <form id="editForm" method="POST">
+                    {{ edit_form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ edit_form.item_name(id="editName", class="visible_placeholders") }}
+                    </div>
+                    <div class="input-group">
+                        {{ edit_form.item_price(id="editPrice", class="visible_placeholders") }}
+                    </div>
+                    <div class="input-group">
+                        {{ edit_form.category(id="editCategory") }}
+                    </div>
+                    <div class="input-group">
+                        {{ edit_form.description(id="editDescription") }}
+                    </div>
+                    <button type="submit" class="btn-update">Save Changes</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="viewItemsModal" class="modal-overlay">
+            <div class="modal-content view-items-modal">
+                <button class="modal-close-x" onclick="closeViewItemsModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <div class="modal-header-section">
+                    <div class="modal-icon">🧾</div>
+                    <div class="modal-title-group">
+                        <h2>Order Summary</h2>
+                        <p class="modal-order-number">Order #<span id="modal-order-id"></span></p>
+                    </div>
+                </div>
+
+                <div class="modal-divider"></div>
+
+                <div class="modal-items-section">
+                    <h3 class="items-heading">📦 Items Ordered</h3>
+                    <div class="modal-items-container" id="modal-items-list">
+                        <!-- Items will be inserted here by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="modal-divider"></div>
+
+                <div class="modal-total-section">
+                    <div class="total-row">
+                        <span class="total-label">Total Amount</span>
+                        <span class="total-value" id="modal-total">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

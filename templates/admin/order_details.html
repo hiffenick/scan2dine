@@ -1,0 +1,655 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="admin-page">
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2>☕ Cozy Cafe</h2>
+            <p>Admin Panel</p>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="/admin#dashboard" class="menu-item">📊 Dashboard</a>
+            <a href="/admin#menu" class="menu-item">📋 Menu</a>
+            <a href="/admin#orders" class="menu-item active">🛒 Orders</a>
+            <a href="/admin#tables" class="menu-item">🪑 Tables</a>
+            <a href="/menu" class="menu-item">🍽️ Go to Menu</a>
+            <a href="/logout" class="menu-item logout">🚪 Logout</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h1>Order Details - #{{ order_id }}</h1>
+            <a href="/admin/orders/new" class="btn-add-new">➕ Add New Order</a>
+        </header>
+
+        <div id="orderModal" class="modal-overlay show" data-order-id="{{ order_id }}">
+            <div class="modal-content">
+                <span class="close-btn" onclick="goBack()">×</span>
+
+                <h2>🧾 Order #{{ order_id }}</h2>
+
+                <div class="order-meta">
+                    <span><b>Table:</b> <span id="om-table">Loading…</span></span>
+                    <span><b>Customer:</b> <span id="om-customer">Loading…</span></span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th width="80">Qty</th>
+                                <th width="100">Price</th>
+                                <th width="30"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-body">
+                            <tr>
+                                <td colspan="4" style="text-align:center;">Loading…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn-secondary" onclick="addOrderItem()">➕ Add Item</button>
+
+                <div class="input-group status-container">
+                    <label>Status</label>
+                    <input type="text" id="order-status-input" readonly
+                           data-status="pending"
+                           placeholder="Select status…"
+                           onclick="toggleStatusDropdown()"
+                           style="cursor: pointer;">
+                    <div id="status-dropdown" class="status-dropdown">
+                        <div onclick="pickStatus('pending')">Pending</div>
+                        <div onclick="pickStatus('completed')">Completed</div>
+                        <div onclick="pickStatus('cancelled')">Cancelled</div>
+                    </div>
+                </div>
+
+                <div class="order-total">
+                    Total: ₹<span id="order-total">0.00</span>
+                </div>
+
+                <button class="btn-update" onclick="saveOrderChanges()">💾 Save Changes</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+.admin-page {
+    display: flex;
+    height: 100vh;
+    background: #f5f5f5;
+}
+
+.admin-sidebar {
+    width: 250px;
+    background: linear-gradient(135deg, #8B4513, #A0522D);
+    color: white;
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+.menu-item {
+    display: block;
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+.menu-item.active,
+.menu-item:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.admin-main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.admin-header {
+    margin-bottom: 20px;
+}
+
+.btn-add-new {
+    background: #228B22;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    transition: background 0.3s;
+}
+
+.btn-add-new:hover {
+    background: #1e7a1e;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    width: 100%;
+    max-width: 850px;
+    padding: 25px;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.order-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.order-meta span {
+    font-size: 14px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 10px;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+}
+
+.orders-table th,
+.orders-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+.orders-table th {
+    background: #f8f8f8;
+    font-weight: 600;
+}
+
+.search-select {
+    width: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.qty-input {
+    width: 60px;
+    padding: 6px;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    margin-top: 10px;
+    background: #8B4513;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-update {
+    margin-top: 25px;
+    background: #228B22;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-update:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.order-total {
+    font-weight: bold;
+    margin-top: 20px;
+    font-size: 1.2em;
+    text-align: right;
+    border-top: 2px solid #eee;
+    padding-top: 10px;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #c0392b;
+    padding: 5px;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin-top: 4px;
+    display: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    z-index: 1200;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.status-container {
+    position: relative;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 250px;
+}
+
+#order-status-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff !important;
+    position: relative;
+    z-index: 1;
+}
+
+.status-dropdown {
+    display: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.status-dropdown div {
+    padding: 10px 12px;
+    cursor: pointer;
+}
+
+.status-dropdown div:hover {
+    background: #f8f1ed;
+    color: #8B4513;
+}
+
+/* 📱 RESPONSIVE STYLES */
+@media (max-width: 768px) {
+    .admin-page {
+        flex-direction: column;
+    }
+    
+    .admin-sidebar {
+        width: 100%;
+        padding: 15px;
+    }
+    
+    .sidebar-menu {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .menu-item {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        font-size: 12px;
+        padding: 8px 5px;
+    }
+    
+    .admin-main {
+        padding: 15px;
+    }
+    
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .admin-header h1 {
+        font-size: 1.3em;
+    }
+    
+    .btn-add-new {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+    }
+    
+    .modal-overlay {
+        padding: 10px;
+    }
+    
+    .modal-content {
+        padding: 20px 15px;
+        max-height: 85vh;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.3em;
+        margin-top: 10px;
+    }
+    
+    .orders-table {
+        font-size: 13px;
+        min-width: 450px;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 8px 5px;
+    }
+    
+    .search-select {
+        font-size: 13px;
+        padding: 5px;
+    }
+    
+    .qty-input {
+        width: 50px;
+        font-size: 13px;
+    }
+    
+    .btn-secondary,
+    .btn-update {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+    
+    .order-total {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 15px 10px;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.1em;
+    }
+    
+    .orders-table {
+        font-size: 12px;
+        min-width: 400px;
+    }
+    
+    .orders-table th,
+    .orders-table td {
+        padding: 6px 4px;
+    }
+    
+    .order-meta {
+        font-size: 13px;
+        gap: 10px;
+    }
+    
+    .close-btn {
+        font-size: 20px;
+    }
+    
+    .btn-add-new {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+</style>
+
+<script>
+let menuItems = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("orderModal");
+    const orderId = Number(modal.dataset.orderId);
+    if (!orderId) return;
+    fetchMenu().finally(() => loadOrderDetails(orderId));
+});
+
+function goBack() {
+    window.location.href = "/admin#orders";
+}
+
+function fetchMenu() {
+    return fetch("/admin/api/menu")
+        .then(res => res.json())
+        .then(data => menuItems = data);
+}
+
+function loadOrderDetails(orderId) {
+    fetch(`/admin/api/orders/${orderId}`)
+        .then(res => res.json())
+        .then(order => {
+            document.getElementById("om-customer").innerText = order.customer;
+            document.getElementById("om-table").innerText = order.table_no;
+            
+            const statusInput = document.getElementById("order-status-input");
+            statusInput.value = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+            statusInput.dataset.status = order.status.toLowerCase();
+        });
+
+    fetch(`/admin/api/orders/${orderId}/items`)
+        .then(res => res.json())
+        .then(items => {
+            const tbody = document.getElementById("items-body");
+            tbody.innerHTML = "";
+            items.forEach(item => addRow(item.name, item.qty, item.price, item.menu_item_id));
+            recalcTotal();
+        });
+}
+
+function addRow(name="", qty=1, price=0, menuItemId=null) {
+    const row = document.createElement("tr");
+    row.dataset.unitPrice = price;
+    row.dataset.menuItemId = menuItemId || "";
+
+    row.innerHTML = `
+        <td>
+            <input type="text" class="search-select"
+                   value="${name}"
+                   onclick="toggleDropdown(this)"
+                   oninput="filterMenu(this)">
+            <select class="menu-dropdown" size="5" onchange="menuPicked(this)">
+                ${menuItems.map(m => `<option data-price="${m.price}" data-id="${m.id}">${m.name}</option>`).join("")}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="qty-input" value="${qty}" min="1"
+                   onchange="recalcRow(this)">
+        </td>
+        <td>₹<span class="item-price">${(qty * price).toFixed(2)}</span></td>
+        <td>
+            <button class="delete-btn" onclick="deleteRow(this)">✖</button>
+        </td>
+    `;
+    document.getElementById("items-body").appendChild(row);
+}
+
+function addOrderItem() {
+    addRow();
+}
+
+function toggleDropdown(input) {
+    document.querySelectorAll(".menu-dropdown").forEach(d => d.style.display = "none");
+    input.nextElementSibling.style.display = "block";
+}
+
+function filterMenu(input) {
+    const dropdown = input.nextElementSibling;
+    const query = input.value.toLowerCase();
+    dropdown.style.display = "block";
+    Array.from(dropdown.options).forEach(opt => {
+        opt.style.display = opt.text.toLowerCase().includes(query) ? "block" : "none";
+    });
+}
+
+function menuPicked(select) {
+    const row = select.closest("tr");
+    const option = select.selectedOptions[0];
+    row.querySelector(".search-select").value = option.text;
+    row.dataset.unitPrice = option.dataset.price;
+    row.dataset.menuItemId = option.dataset.id;
+    select.style.display = "none";
+    recalcRow(select);
+}
+
+function recalcRow(el) {
+    const row = el.closest("tr");
+    const qty = row.querySelector(".qty-input").value;
+    const price = row.dataset.unitPrice || 0;
+    row.querySelector(".item-price").innerText = (qty * price).toFixed(2);
+    recalcTotal();
+}
+
+function recalcTotal() {
+    let total = 0;
+    document.querySelectorAll(".item-price").forEach(p => total += parseFloat(p.innerText));
+    document.getElementById("order-total").innerText = total.toFixed(2);
+}
+
+function deleteRow(btn) {
+    btn.closest("tr").remove();
+    recalcTotal();
+}
+
+function toggleStatusDropdown() {
+    const d = document.getElementById("status-dropdown");
+    d.style.display = d.style.display === "block" ? "none" : "block";
+}
+
+function pickStatus(v) {
+    const statusInput = document.getElementById("order-status-input");
+    statusInput.value = v.charAt(0).toUpperCase() + v.slice(1);
+    statusInput.dataset.status = v.toLowerCase();
+    document.getElementById("status-dropdown").style.display = "none";
+}
+
+function saveOrderChanges() {
+    const modal = document.getElementById("orderModal");
+    const orderId = Number(modal.dataset.orderId);
+    
+    const saveBtn = document.querySelector(".btn-update");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "💾 Saving...";
+
+    const rows = document.querySelectorAll("#items-body tr");
+    const items = [];
+    let hasError = false;
+
+    rows.forEach(row => {
+        const menuItemId = row.dataset.menuItemId;
+        const qty = row.querySelector(".qty-input").value;
+        
+        if (!menuItemId || menuItemId === "") {
+            alert("Please select a valid menu item for all rows");
+            hasError = true;
+            return;
+        }
+        
+        items.push({
+            menu_item_id: parseInt(menuItemId),
+            qty: parseInt(qty)
+        });
+    });
+
+    if (hasError) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Save Changes";
+        return;
+    }
+
+    const statusInput = document.getElementById("order-status-input");
+    const status = statusInput.dataset.status || "pending";
+
+    const payload = {
+        items: items,
+        status: status
+    };
+
+    console.log("Sending payload:", JSON.stringify(payload, null, 2));
+
+    fetch(`/admin/api/orders/${orderId}/update`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        console.log("Response status:", res.status);
+        return res.json();
+    })
+    .then(data => {
+        console.log("Response data:", data);
+        if (data.success) {
+            saveBtn.textContent = "✅ Saved!";
+            saveBtn.style.background = "#28a745";
+            
+            setTimeout(() => {
+                window.location.href = "/admin#orders";
+            }, 500);
+        } else {
+            alert("Error: " + (data.message || "Failed to update order"));
+            saveBtn.disabled = false;
+            saveBtn.textContent = "💾 Save Changes";
+            saveBtn.style.background = "#228B22";
+        }
+    })
+    .catch(err => {
+        console.error("Save error:", err);
+        alert("Error saving order. Check console for details.");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Save Changes";
+        saveBtn.style.background = "#228B22";
+    });
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", (e) => {
+    if (!e.target.matches(".search-select") && !e.target.matches("#order-status-input")) {
+        document.querySelectorAll(".menu-dropdown").forEach(d => d.style.display = "none");
+        document.getElementById("status-dropdown").style.display = "none";
+    }
+});
+</script>
+{% endblock %}

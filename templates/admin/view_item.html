@@ -1,0 +1,526 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="order-view-wrapper">
+    <div class="order-view-container">
+        <!-- Back Button -->
+        <a href="/admin#orders" class="back-button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Orders
+        </a>
+
+        <!-- Order Header -->
+        <div class="order-header">
+            <div class="order-header-left">
+                <h1>🧾 Order Details</h1>
+                <p class="order-number">Order #{{ order.id }}</p>
+            </div>
+            <div class="order-header-right">
+                <span class="status-badge {{ order.status }}">
+                    {{ order.status.capitalize() }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Customer & Table Info -->
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="info-icon">👤</div>
+                <div class="info-content">
+                    <span class="info-label">Customer</span>
+                    <span class="info-value">{{ order.customer }}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">🪑</div>
+                <div class="info-content">
+                    <span class="info-label">Table Number</span>
+                    <span class="info-value">Table {{ order.table_no }}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">🕐</div>
+                <div class="info-content">
+                    <span class="info-label">Order Time</span>
+                    <span class="info-value">{{ order.created_at.strftime('%I:%M %p') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="items-section">
+            <h2>📋 Order Items</h2>
+            <div class="items-list">
+                {% for item in order.items %}
+                <div class="item-card">
+                    <div class="item-info">
+                        <span class="item-name">{{ item.menu_item.item_name }}</span>
+                        <span class="item-category">{{ item.menu_item.category }}</span>
+                    </div>
+                    <div class="item-quantity">
+                        <span class="qty-label">Qty</span>
+                        <span class="qty-value">×{{ item.quantity }}</span>
+                    </div>
+                    <div class="item-price">
+                        <span class="price-each">₹{{ item.menu_item.item_price }} each</span>
+                        <span class="price-total">₹{{ (item.quantity * item.menu_item.item_price)|round(2) }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="summary-section">
+            <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value">₹{{ order.total|round(2) }}</span>
+            </div>
+            <div class="summary-row total-row">
+                <span class="summary-label">Total Amount</span>
+                <span class="summary-value total-amount">₹{{ order.total|round(2) }}</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn-secondary" onclick="window.print()">
+                🖨️ Print Receipt
+            </button>
+            <button class="btn-primary" onclick="updateOrderStatus()">
+                ✅ Mark as {{ 'Completed' if order.status == 'pending' else 'Pending' }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==================== Order View Wrapper ==================== */
+.order-view-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+    padding: 20px;
+}
+
+.order-view-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+/* ==================== Back Button ==================== */
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #8B4513;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.back-button:hover {
+    background: #f5f5f5;
+    transform: translateX(-5px);
+}
+
+.back-button svg {
+    transition: transform 0.3s ease;
+}
+
+.back-button:hover svg {
+    transform: translateX(-3px);
+}
+
+/* ==================== Order Header ==================== */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 25px;
+}
+
+.order-header-left h1 {
+    margin: 0 0 5px 0;
+    color: #333;
+    font-size: 2em;
+}
+
+.order-number {
+    color: #8B4513;
+    font-weight: 600;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: capitalize;
+    display: inline-block;
+}
+
+.status-badge.pending {
+    background-color: #ffedd5;
+    color: #9a3412;
+    border: 2px solid #fdba74;
+}
+
+.status-badge.completed {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 2px solid #86efac;
+}
+
+/* ==================== Info Cards ==================== */
+.info-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #f9f9f9 0%, #f5f5f5 100%);
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #e5e5e5;
+}
+
+.info-icon {
+    font-size: 2.5em;
+    line-height: 1;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #333;
+    font-weight: 700;
+}
+
+/* ==================== Items Section ==================== */
+.items-section {
+    margin-bottom: 30px;
+}
+
+.items-section h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.item-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 20px;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.item-card:hover {
+    background: #f5f5f5;
+    border-color: #d5d5d5;
+    transform: translateX(5px);
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.item-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.item-category {
+    font-size: 13px;
+    color: #8B4513;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.item-quantity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 20px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+}
+
+.qty-label {
+    font-size: 11px;
+    color: #999;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.qty-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #8B4513;
+}
+
+.item-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.price-each {
+    font-size: 12px;
+    color: #999;
+}
+
+.price-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: #8B4513;
+}
+
+/* ==================== Summary Section ==================== */
+.summary-section {
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.summary-label {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.total-row {
+    padding-top: 15px;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    margin-top: 5px;
+}
+
+.total-amount {
+    font-size: 28px;
+}
+
+/* ==================== Action Buttons ==================== */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #8B4513;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #6F4E37;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: #8B4513;
+    border: 2px solid #8B4513;
+}
+
+.btn-secondary:hover {
+    background: #f5f5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+    .back-button,
+    .action-buttons {
+        display: none;
+    }
+
+    .order-view-wrapper {
+        background: white;
+        padding: 0;
+    }
+
+    .order-view-container {
+        box-shadow: none;
+        padding: 20px;
+    }
+}
+
+/* ==================== Mobile Responsive ==================== */
+@media (max-width: 768px) {
+    .order-view-wrapper {
+        padding: 10px;
+    }
+
+    .order-view-container {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .order-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .order-header-left h1 {
+        font-size: 1.5em;
+    }
+
+    .info-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .item-card {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .item-quantity,
+    .item-price {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .item-price {
+        align-items: center;
+    }
+
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .total-amount {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-header-left h1 {
+        font-size: 1.3em;
+    }
+
+    .info-icon {
+        font-size: 2em;
+    }
+
+    .item-name {
+        font-size: 14px;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+function updateOrderStatus() {
+    const orderId = {{ order.id }};
+    const currentStatus = '{{ order.status }}';
+    const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+    
+    if (confirm(`Change order status to ${newStatus}?`)) {
+        fetch(`/admin/api/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Order status updated! ✅');
+                location.reload();
+            } else {
+                alert('Failed to update status ❌');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error updating status ❌');
+        });
+    }
+}
+</script>
+{% endblock %}

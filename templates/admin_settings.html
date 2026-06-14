@@ -1,0 +1,19 @@
+{% extends 'admin.html' %}
+
+{% block content %}
+  {# admin.html already defines layout and sections; this template will render just settings content #}
+  <div style="padding:24px; max-width:720px; margin:20px auto;">
+    <h2>UPI / Payment Settings</h2>
+    <form method="POST" action="{{ url_for('admin.update_upi_settings') }}">
+      <div style="margin-bottom:12px;">
+        <label>UPI VPA (e.g. merchant@bank)</label>
+        <input type="text" name="upi_vpa" value="{{ upi_vpa }}" style="width:100%; padding:8px; margin-top:6px;" required />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label>Merchant / Business Name</label>
+        <input type="text" name="upi_name" value="{{ upi_name }}" style="width:100%; padding:8px; margin-top:6px;" />
+      </div>
+      <button class="btn-primary" type="submit">Save UPI Settings</button>
+    </form>
+  </div>
+{% endblock %}
