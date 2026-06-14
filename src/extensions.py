@@ -9,6 +9,3 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 migrate = Migrate()
 csrf = CSRFProtect()
-sess = Session()
-
-redis_client = Redis(host="localhost", port=6379, db=0, decode_responses=False)

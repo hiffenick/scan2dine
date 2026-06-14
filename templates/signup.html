@@ -1,34 +1,128 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="login-page">
-    <div class="login-container signup-container">
-        <h2>Sign Up</h2>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
 
-        <form method="POST">
-            {{ form.hidden_tag() }}
+<div class="loginpage">
+  <div class="login-split">
 
-            {{ form.username(class="form-control", placeholder="Username") }}
-            {{ form.email(class="form-control", placeholder="Email") }}
-            {{ form.password(class="form-control", placeholder="Password") }}
-            {% for error in form.password.errors %}
-                <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
-            {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
-            {% for error in form.confirm_password.errors %}
-                <div class="text-danger small">{{ error }}</div>
-            {% endfor %}
-            <div class="button-group">
-                {{ form.submit(class="btn") }}
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="signup-link">
-                    Back to Login
-                </a>
-            </div>
-        </form>
-
-        <div class="footer">
-            &copy; 2026 Cozy Cafe
+    <!-- Left panel: branding -->
+    <div class="login-brand">
+      <div class="brand-inner">
+        <div class="brand-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 28 C8 28 10 14 20 12 C30 10 32 24 32 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M6 28 H34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M32 18 C35 18 37 20 37 22 C37 24 35 26 32 26" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M12 28 L10 34 H30 L28 28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
         </div>
+        <h1 class="brand-name">Cozy Cafe</h1>
+        <p class="brand-tagline">Join the team</p>
+        <div class="brand-divider"></div>
+        <p class="brand-desc">Create your admin account to start managing your cafe's menu, orders, and daily operations.</p>
+
+        <ul class="brand-perks">
+          <li>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Full menu management
+          </li>
+          <li>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Order tracking
+          </li>
+          <li>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Team access controls
+          </li>
+        </ul>
+      </div>
     </div>
+
+    <!-- Right panel: form -->
+    <div class="login-container">
+      <div class="form-header">
+        <h2>Sign Up</h2>
+        <p>Create your admin account</p>
+      </div>
+
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="field-group">
+          <label for="username">Username</label>
+          {{ form.username(class="form-control", placeholder="Choose a username", id="username") }}
+          {% for error in form.username.errors %}
+            <div class="field-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="field-group">
+          <label for="email">Email</label>
+          {{ form.email(class="form-control", placeholder="Your email address", id="email") }}
+          {% for error in form.email.errors %}
+            <div class="field-error">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="password">Password</label>
+            <div class="password-wrap">
+              {{ form.password(class="form-control", placeholder="Create a password", id="password") }}
+              <button type="button" class="toggle-pw" data-target="password" aria-label="Toggle password visibility">
+                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            {% for error in form.password.errors %}
+              <div class="field-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="field-group">
+            <label for="confirm_password">Confirm Password</label>
+            <div class="password-wrap">
+              {{ form.confirm_password(class="form-control", placeholder="Repeat password", id="confirm_password") }}
+              <button type="button" class="toggle-pw" data-target="confirm_password" aria-label="Toggle confirm password visibility">
+                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            {% for error in form.confirm_password.errors %}
+              <div class="field-error">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Password strength indicator -->
+        <div class="strength-wrap" id="strength-wrap">
+          <div class="strength-bar">
+            <div class="strength-fill" id="strength-fill"></div>
+          </div>
+          <span class="strength-label" id="strength-label"></span>
+        </div>
+
+        <div class="button-group">
+          {{ form.submit(class="btn") }}
+          <a href="{{ url_for('admin.admin_dashboard') }}" class="signup-link">Back to Login</a>
+        </div>
+      </form>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="footer">&copy; 2026 Cozy Cafe</div>
+    </div>
+
+  </div>
 </div>
+
+<script src="{{ url_for('static', filename='js/signup.js') }}"></script>
 {% endblock content %}
