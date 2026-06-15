@@ -12,6 +12,7 @@ from src.customer_route import customer_route
 from src.models.admin import User
 from src.models.menu import MenuItem
 from src.models.order import Order
+from src.models.category import Category
 from src.models.order_item import OrderItem
 from src.customer.menu_services import customer_menu
 from src.setup import setuproute

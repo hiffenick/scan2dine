@@ -10,9 +10,14 @@ const state = {
   activeAvail : 'all',
   searchQuery : '',
   sortBy      : 'default',
-  viewMode    : 'grid',    // 'grid' | 'list'
+  viewMode    : 'grid',
   deleteTarget: { id: null, name: '' },
 };
+
+/* ══════════════════════════════════
+   CSRF
+══════════════════════════════════ */
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 /* ══════════════════════════════════
    DOM REFS
@@ -64,7 +69,6 @@ function applyFilters() {
   const cards = allCards();
   let visible = 0;
 
-  // Collect and sort card data
   const sorted = Array.from(cards).sort((a, b) => {
     const s = state.sortBy;
     if (s === 'name_asc')   return a.dataset.name.localeCompare(b.dataset.name);
@@ -74,27 +78,22 @@ function applyFilters() {
     return 0;
   });
 
-  // Re-append in sorted order
   sorted.forEach(card => menuContainer.appendChild(card));
 
-  // Show/hide based on filters
   sorted.forEach(card => {
     const catMatch   = state.activeCat   === 'all' || card.dataset.cat === state.activeCat;
     const availMatch = state.activeAvail === 'all' || card.dataset.avail === state.activeAvail;
     const nameMatch  = card.dataset.name.includes(state.searchQuery);
-
     const show = catMatch && availMatch && nameMatch;
     card.style.display = show ? '' : 'none';
     if (show) visible++;
   });
 
-  // Empty state
   if (emptyState) {
     emptyState.style.display = visible === 0 && cards.length > 0 ? 'flex' : 'none';
   }
 }
 
-/* Category filter pills */
 categoryFilters.addEventListener('click', e => {
   const btn = e.target.closest('.mn-filter');
   if (!btn) return;
@@ -104,7 +103,6 @@ categoryFilters.addEventListener('click', e => {
   applyFilters();
 });
 
-/* Search */
 searchInput.addEventListener('input', () => {
   state.searchQuery = searchInput.value.trim().toLowerCase();
   searchClear.style.display = state.searchQuery ? '' : 'none';
@@ -119,19 +117,16 @@ searchClear.addEventListener('click', () => {
   applyFilters();
 });
 
-/* Sort */
 sortSelect.addEventListener('change', () => {
   state.sortBy = sortSelect.value;
   applyFilters();
 });
 
-/* Availability filter */
 availFilter.addEventListener('change', () => {
   state.activeAvail = availFilter.value;
   applyFilters();
 });
 
-/* View toggle */
 viewGrid.addEventListener('click', () => setView('grid'));
 viewList.addEventListener('click', () => setView('list'));
 
@@ -143,25 +138,17 @@ function setView(mode) {
 }
 
 function resetFilters() {
-  // Reset category
   categoryFilters.querySelectorAll('.mn-filter').forEach((b, i) => {
     b.classList.toggle('mn-filter--active', i === 0);
   });
   state.activeCat = 'all';
-
-  // Reset search
   searchInput.value = '';
   state.searchQuery = '';
   searchClear.style.display = 'none';
-
-  // Reset availability
   availFilter.value = 'all';
   state.activeAvail = 'all';
-
-  // Reset sort
   sortSelect.value = 'default';
   state.sortBy = 'default';
-
   applyFilters();
 }
 
@@ -193,21 +180,19 @@ modalClose.addEventListener('click', closeDishModal);
 modalCancel.addEventListener('click', closeDishModal);
 dishModalBack.addEventListener('click', closeDishModal);
 
-/* Edit dish */
 window.editDish = function(id) {
   fetch(`/admin/menu/item/${id}`)
     .then(r => r.json())
     .then(data => {
       if (!data.success) { showToast('Could not load dish', 'error'); return; }
       const item = data.item;
-      dishId.value                           = item.id;
-      dishForm.item_name.value               = item.item_name;
-      dishForm.price.value                   = item.price;
-      dishForm.category_id.value             = item.category_id || '';
-      dishForm.description.value             = item.description || '';
-      dishForm.image_url.value               = item.image_url || '';
-      dishForm.is_available.checked          = item.is_available;
-      // veg radio
+      dishId.value                  = item.id;
+      dishForm.item_name.value      = item.item_name;
+      dishForm.price.value          = item.item_price;
+      dishForm.category_id.value    = item.category_id || '';
+      dishForm.description.value    = item.description || '';
+      dishForm.image_url.value      = item.image_url || '';
+      dishForm.is_available.checked = item.is_available;
       const vegVal = item.is_veg === true ? 'true' : item.is_veg === false ? 'false' : null;
       if (vegVal) {
         const radio = dishForm.querySelector(`input[name="is_veg"][value="${vegVal}"]`);
@@ -218,20 +203,18 @@ window.editDish = function(id) {
     .catch(() => showToast('Network error', 'error'));
 };
 
-/* Submit */
 dishForm.addEventListener('submit', e => {
   e.preventDefault();
   clearFormErrors();
 
-  const name = dishForm.item_name.value.trim();
+  const name  = dishForm.item_name.value.trim();
   const price = parseFloat(dishForm.price.value);
   const cat   = dishForm.category_id.value;
 
   let valid = true;
-  if (!name)       { markError('fieldName',     'Required');        valid = false; }
-  if (isNaN(price) || price < 0) { markError('fieldPrice', 'Enter a valid price'); valid = false; }
-  if (!cat)        { markError('fieldCategory', 'Pick a category'); valid = false; }
-
+  if (!name)                        { markError('fieldName',     'Required');            valid = false; }
+  if (isNaN(price) || price < 0)    { markError('fieldPrice',    'Enter a valid price'); valid = false; }
+  if (!cat)                         { markError('fieldCategory', 'Pick a category');     valid = false; }
   if (!valid) return;
 
   const body = {
@@ -244,29 +227,72 @@ dishForm.addEventListener('submit', e => {
     is_veg      : dishForm.querySelector('input[name="is_veg"]:checked')?.value ?? null,
   };
 
-  const id      = dishId.value;
-  const url     = id ? `/admin/menu/item/${id}` : '/admin/menu/item';
-  const method  = id ? 'PUT' : 'POST';
+  const id     = dishId.value;
+  const url    = id ? `/admin/menu/item/${id}` : '/admin/menu/item';
+  const method = id ? 'PUT' : 'POST';
 
   modalSubmit.disabled = true;
   modalSubmit.textContent = 'Saving…';
 
   fetch(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken' : CSRF,
+    },
     body: JSON.stringify(body),
   })
   .then(r => r.json())
   .then(data => {
-    if (data.success) {
-      showToast(id ? 'Dish updated' : 'Dish added', 'success');
-      closeDishModal();
-      // Reload to reflect new/updated card
-      setTimeout(() => location.reload(), 600);
-    } else {
-      showToast(data.error || 'Something went wrong', 'error');
+  if (data.success) {
+
+    const item = data.item;
+
+    const card = document.querySelector(
+      `.mn-card[data-id="${item.id}"]`
+    );
+
+    if (card) {
+
+      card.dataset.name = item.item_name.toLowerCase();
+      card.dataset.price = item.item_price;
+      card.dataset.cat = item.category_id;
+      card.dataset.avail = item.is_available
+        ? 'available'
+        : 'hidden';
+
+      const name = card.querySelector('.mn-card__name');
+      if (name) name.textContent = item.item_name;
+
+      const desc = card.querySelector('.mn-card__desc');
+      if (desc) desc.textContent = item.description || '';
+
+      const price = card.querySelector('.mn-card__price');
+      if (price) price.textContent = `₹${item.item_price}`;
+
+      const badge = card.querySelector('.mn-card__avail-badge');
+      if (badge) {
+        badge.textContent = item.is_available
+          ? 'Available'
+          : 'Hidden';
+
+        badge.className =
+          `mn-card__avail-badge mn-card__avail-badge--${
+            item.is_available ? 'on' : 'off'
+          }`;
+      }
+
+      const img = card.querySelector('img');
+      if (img && item.image_url) {
+        img.src = item.image_url;
+      }
     }
-  })
+
+    showToast('Dish updated', 'success');
+    closeDishModal();
+    applyFilters();
+  }
+})
   .catch(() => showToast('Network error', 'error'))
   .finally(() => {
     modalSubmit.disabled = false;
@@ -274,29 +300,33 @@ dishForm.addEventListener('submit', e => {
   });
 });
 
-/* Toggle availability (inline, no reload) */
+/* ══════════════════════════════════
+   TOGGLE AVAILABILITY
+══════════════════════════════════ */
 window.toggleAvailability = function(id, currentlyAvailable) {
-  fetch(`/admin/menu/item/${id}/toggle`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        const card  = menuContainer.querySelector(`.mn-card[data-id="${id}"]`);
-        if (!card) return;
-        const isNow = data.is_available;
-        card.dataset.avail = isNow ? 'available' : 'hidden';
-
-        const badge = card.querySelector('.mn-card__avail-badge');
-        if (badge) {
-          badge.textContent = isNow ? 'Available' : 'Hidden';
-          badge.className   = `mn-card__avail-badge mn-card__avail-badge--${isNow ? 'on' : 'off'}`;
-        }
-        showToast(`Dish ${isNow ? 'made available' : 'hidden'}`, 'success');
-        applyFilters();
-      } else {
-        showToast(data.error || 'Failed to toggle', 'error');
+  fetch(`/admin/menu/item/${id}/toggle`, {
+    method : 'POST',
+    headers: { 'X-CSRFToken': CSRF },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const card  = menuContainer.querySelector(`.mn-card[data-id="${id}"]`);
+      if (!card) return;
+      const isNow = data.is_available;
+      card.dataset.avail = isNow ? 'available' : 'hidden';
+      const badge = card.querySelector('.mn-card__avail-badge');
+      if (badge) {
+        badge.textContent = isNow ? 'Available' : 'Hidden';
+        badge.className   = `mn-card__avail-badge mn-card__avail-badge--${isNow ? 'on' : 'off'}`;
       }
-    })
-    .catch(() => showToast('Network error', 'error'));
+      showToast(`Dish ${isNow ? 'made available' : 'hidden'}`, 'success');
+      applyFilters();
+    } else {
+      showToast(data.error || 'Failed to toggle', 'error');
+    }
+  })
+  .catch(() => showToast('Network error', 'error'));
 };
 
 /* ══════════════════════════════════
@@ -327,30 +357,33 @@ deleteConfirmBtn.addEventListener('click', () => {
   deleteConfirmBtn.disabled = true;
   deleteConfirmBtn.textContent = 'Deleting…';
 
-  fetch(`/admin/menu/item/${id}`, { method: 'DELETE' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        const card = menuContainer.querySelector(`.mn-card[data-id="${id}"]`);
-        if (card) {
-          card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-          card.style.opacity    = '0';
-          card.style.transform  = 'scale(0.95)';
-          setTimeout(() => card.remove(), 220);
-        }
-        closeDeleteModal();
-        showToast(`"${name}" removed`, 'success');
-        updateStatCounts();
-        applyFilters();
-      } else {
-        showToast(data.error || 'Delete failed', 'error');
+  fetch(`/admin/menu/item/${id}`, {
+    method : 'DELETE',
+    headers: { 'X-CSRFToken': CSRF },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const card = menuContainer.querySelector(`.mn-card[data-id="${id}"]`);
+      if (card) {
+        card.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        card.style.opacity    = '0';
+        card.style.transform  = 'scale(0.95)';
+        setTimeout(() => card.remove(), 220);
       }
-    })
-    .catch(() => showToast('Network error', 'error'))
-    .finally(() => {
-      deleteConfirmBtn.disabled = false;
-      deleteConfirmBtn.textContent = 'Delete Dish';
-    });
+      closeDeleteModal();
+      showToast(`"${name}" removed`, 'success');
+      updateStatCounts();
+      applyFilters();
+    } else {
+      showToast(data.error || 'Delete failed', 'error');
+    }
+  })
+  .catch(() => showToast('Network error', 'error'))
+  .finally(() => {
+    deleteConfirmBtn.disabled = false;
+    deleteConfirmBtn.textContent = 'Delete Dish';
+  });
 });
 
 /* ══════════════════════════════════
@@ -372,7 +405,9 @@ catModalClose.addEventListener('click', closeCatModal);
 catModalBack.addEventListener('click', closeCatModal);
 
 addCatBtn.addEventListener('click', addCategory);
-newCatInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } });
+newCatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addCategory(); }
+});
 
 function addCategory() {
   const name = newCatInput.value.trim();
@@ -382,19 +417,21 @@ function addCategory() {
 
   fetch('/admin/menu/category', {
     method : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify({ name }),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken' : CSRF,
+    },
+    body: JSON.stringify({ name }),
   })
   .then(r => r.json())
   .then(data => {
     if (data.success) {
       newCatInput.value = '';
-      // Append to cat list in modal
       const catList = document.getElementById('catList');
       const row = document.createElement('div');
-      row.className    = 'mn-cat-row';
-      row.dataset.id   = data.category.id;
-      row.innerHTML = `
+      row.className  = 'mn-cat-row';
+      row.dataset.id = data.category.id;
+      row.innerHTML  = `
         <span class="mn-cat-row__name">${escHtml(data.category.name)}</span>
         <button class="mn-cat-row__del" onclick="deleteCategory(${data.category.id})" aria-label="Delete ${escHtml(data.category.name)}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -404,14 +441,12 @@ function addCategory() {
       `;
       catList.appendChild(row);
 
-      // Also add to filter pills
       const pill = document.createElement('button');
-      pill.className     = 'mn-filter';
-      pill.dataset.cat   = data.category.id;
-      pill.textContent   = data.category.name;
+      pill.className   = 'mn-filter';
+      pill.dataset.cat = data.category.id;
+      pill.textContent = data.category.name;
       categoryFilters.appendChild(pill);
 
-      // Add to form select
       const opt = new Option(data.category.name, data.category.id);
       document.getElementById('fieldCategory').add(opt);
 
@@ -428,26 +463,28 @@ function addCategory() {
 window.deleteCategory = function(id) {
   if (!confirm('Delete this category?')) return;
 
-  fetch(`/admin/menu/category/${id}`, { method: 'DELETE' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        document.querySelector(`.mn-cat-row[data-id="${id}"]`)?.remove();
-        document.querySelector(`.mn-filter[data-cat="${id}"]`)?.remove();
-        const opt = document.querySelector(`#fieldCategory option[value="${id}"]`);
-        opt?.remove();
-        if (state.activeCat === String(id)) {
-          state.activeCat = 'all';
-          document.querySelector('.mn-filter[data-cat="all"]')?.classList.add('mn-filter--active');
-          applyFilters();
-        }
-        updateCatCount();
-        showToast('Category deleted', 'success');
-      } else {
-        showToast(data.error || 'Cannot delete — dishes use this category', 'error');
+  fetch(`/admin/menu/category/${id}`, {
+    method : 'DELETE',
+    headers: { 'X-CSRFToken': CSRF },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      document.querySelector(`.mn-cat-row[data-id="${id}"]`)?.remove();
+      document.querySelector(`.mn-filter[data-cat="${id}"]`)?.remove();
+      document.querySelector(`#fieldCategory option[value="${id}"]`)?.remove();
+      if (state.activeCat === String(id)) {
+        state.activeCat = 'all';
+        document.querySelector('.mn-filter[data-cat="all"]')?.classList.add('mn-filter--active');
+        applyFilters();
       }
-    })
-    .catch(() => showToast('Network error', 'error'));
+      updateCatCount();
+      showToast('Category deleted', 'success');
+    } else {
+      showToast(data.error || 'Cannot delete — dishes use this category', 'error');
+    }
+  })
+  .catch(() => showToast('Network error', 'error'));
 };
 
 /* ══════════════════════════════════
@@ -492,7 +529,6 @@ let toastTimer = null;
 function showToast(msg, type = '') {
   toast.textContent = msg;
   toast.className   = `mn-toast${type ? ' mn-toast--' + type : ''}`;
-  // Force reflow
   void toast.offsetWidth;
   toast.classList.add('show');
   clearTimeout(toastTimer);
@@ -503,13 +539,11 @@ function showToast(msg, type = '') {
    KEYBOARD SHORTCUTS
 ══════════════════════════════════ */
 document.addEventListener('keydown', e => {
-  // Close any open modal on Escape
   if (e.key === 'Escape') {
     if (dishModal.classList.contains('visible'))   { closeDishModal();   return; }
     if (deleteModal.classList.contains('visible')) { closeDeleteModal(); return; }
     if (catModal.classList.contains('visible'))    { closeCatModal();    return; }
   }
-  // Focus search on /
   if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
     e.preventDefault();
     searchInput.focus();
