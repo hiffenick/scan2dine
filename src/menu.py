@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template,session,redirect,url_for
 from src.models.menu import MenuItem
+from flask_login import current_user
 
 menuroute = Blueprint('menu', __name__)
 
@@ -16,5 +17,5 @@ def menu():
     menu_items = MenuItem.query.all()
 
     # Pass items to template
-    return render_template('menu.html', menu_items=menu_items)
+    return render_template('admin/menu.html', menu_items=menu_items,user = current_user)
 

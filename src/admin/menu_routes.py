@@ -1,4 +1,5 @@
 from flask import redirect, url_for, flash
+from flask_login import current_user
 from src.services.menu_service import (
     create_menu_items,
     delete_menu_item,
@@ -56,11 +57,14 @@ from flask import render_template, session, redirect, url_for
 from src.models.menu import MenuItem
 from . import admin_bp  # the blueprint
 
-@admin_bp.route('/menu', methods=['GET','POST'])
-def menu():
-    if 'user_id' not in session:
-        return redirect(url_for('login.login'))
+from flask_login import login_required, current_user
 
-    # fetch all menu items (active or inactive)
+@admin_bp.route('/menu')
+@login_required
+def menu():
     menu_items = MenuItem.query.all()
-    return render_template('menu.html', menu_items=menu_items)
+
+    return render_template(
+        'admin/menu.html',
+        menu_items=menu_items
+    )

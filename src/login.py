@@ -3,6 +3,7 @@ User authentication/login module
 Handles user login and 2FA verification
 """
 from flask import Blueprint, redirect, url_for, render_template, request, session, flash
+from flask_login import login_user
 from src.models.admin import User
 from src.wtforms import VerifyForm
 from src.wtforms import LoginForm
@@ -33,7 +34,6 @@ def login():
             return render_template("index.html", form=form)
 
         # Store temporary user for 2FA
-        session.clear()
         session["pending_user_id"] = user.id
 
         return redirect(url_for("login.verify_2fa"))
@@ -41,36 +41,36 @@ def login():
     return render_template("index.html", form=form)
 
 
-def handle_login_submission(form):
-    """
-    Handle login form submission
-    Validate credentials and setup session
-    """
-    username = form.username.data.strip()
-    password = form.password.data
+# def handle_login_submission(form):
+#     """
+#     Handle login form submission
+#     Validate credentials and setup session
+#     """
+#     username = form.username.data.strip()
+#     password = form.password.data
 
-    # Get user from database
-    user = UserService.get_user_by_username(username)
+#     # Get user from database
+#     user = UserService.get_user_by_username(username)
 
-    if not user:
-        flash('Invalid username or password', 'error')
-        return render_template('index.html', form=form)
+#     if not user:
+#         flash('Invalid username or password', 'error')
+#         return render_template('index.html', form=form)
 
-    # Verify password
-    if not UserService.verify_password(user, password):
-        flash('Invalid username or password', 'error')
-        return render_template('index.html', form=form)
+#     # Verify password
+#     if not UserService.verify_password(user, password):
+#         flash('Invalid username or password', 'error')
+#         return render_template('index.html', form=form)
 
-    # Credentials are correct - setup pre-2FA session
-    SessionManager.create_pre_2fa_session(session, user.id)
+#     # Credentials are correct - setup pre-2FA session
+#     SessionManager.create_pre_2fa_session(session, user.id)
 
-    # Check if 2FA is enabled
-    if not user.totp_enable:
-        # 2FA not set up - redirect to setup page
-        return redirect(url_for('setup.setup'))
-    else:
-        # 2FA is enabled - redirect to 2FA verification page
-        return redirect(url_for('login.verify_2fa'))
+#     # Check if 2FA is enabled
+#     if not user.totp_enable:
+#         # 2FA not set up - redirect to setup page
+#         return redirect(url_for('setup.setup'))
+#     else:
+#         # 2FA is enabled - redirect to 2FA verification page
+#         return redirect(url_for('login.verify_2fa'))
 
 
 @login_route.route('/verify-2fa', methods=['GET', 'POST'])
@@ -91,8 +91,7 @@ def verify_2fa():
 
         if totp.verify(code):
 
-            session["user_id"] = user.id
-            session["logged_in"] = True
+            login_user(user)   
 
             session.pop("pending_user_id", None)
 
@@ -127,7 +126,7 @@ def handle_2fa_verification(user, form):
 
     if totp.verify(verify_code, valid_window=1):
 
-        SessionManager.create_user_session(session, user)
+        # SessionManager.create_user_session(session, user)
 
         print("LOGIN SUCCESS")
         print(dict(session))
@@ -137,7 +136,7 @@ def handle_2fa_verification(user, form):
     # Allow for time drift (±30 seconds)
     if totp.verify(verify_code, valid_window=1):
         # Code is valid - complete login
-        SessionManager.create_user_session(session, user)
+        # SessionManager.create_user_session(session, user)
         flash('Successfully logged in!', 'success')
         return redirect(url_for('admin.admin_dashboard'))
     else:

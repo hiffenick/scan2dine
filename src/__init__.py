@@ -20,6 +20,7 @@ from flask import Flask
 from src.admin import admin_bp
 from src.customer.order import customer_order_bp
 from src.customer.greating import greeting
+from src.extensions import login_manager
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 templatefolder = os.path.join(os.path.dirname(basedir),'templates')
@@ -57,6 +58,8 @@ def createapp():
         root_logger.addHandler(handler)
     # Ensure root logger will emit debug messages
     root_logger.setLevel(logging.DEBUG)
+    login_manager.init_app(app)
+    login_manager.login_view = "login.login"
 
     # Configure Flask and Werkzeug loggers to DEBUG in development
     app.logger.setLevel(logging.DEBUG)
@@ -191,5 +194,11 @@ def createapp():
 
     # for rule in app.url_map.iter_rules():
     #     print(rule.endpoint, "=>", rule)
+
+    from src.models.admin import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
     
     return app

@@ -1,0 +1,142 @@
+# Secure Role-Based QR Restaurant Ordering Architecture
+
+## Project Overview
+This project is a **QR-based Cafe Order Management System** developed using **Flask** and **Microsoft SQL Server**, designed to simulate a real-world restaurant ordering workflow.
+
+While the problem statement appears simple, the primary focus of this project is on **backend architecture, modularity, security, and real-world system design practices**, rather than just UI-level functionality.
+
+---
+
+## Key Objectives
+- Implement a **real-time QR-based ordering workflow**
+- Design a **modular, scalable Flask application**
+- Apply **REST API principles**
+- Ensure **security using sessions, CSRF protection, and authentication**
+- Separate **customer and admin responsibilities**
+- Use an **industry-grade relational database (MSSQL)**
+
+---
+
+## Technology Stack
+- **Backend Framework:** Flask (Python)
+- **Database:** Microsoft SQL Server (MSSQL)
+- **ORM & Migrations:** SQLAlchemy + Flask-Migrate
+- **Frontend:** HTML, CSS, JavaScript , GSAP , BootStrap
+- **Forms & Validation:** WTForms
+- **Security:** CSRF Tokens, Session Management
+- **Architecture:** Flask Blueprints, REST APIs
+
+---
+
+## System Architecture
+The application follows a **modular blueprint-based architecture** to ensure separation of concerns and maintainability.
+
+
+Each module is isolated using **Flask Blueprints**, allowing the application to scale easily and remain maintainable.
+
+---
+
+## Core Features
+
+### 1. QR-Based Table Ordering
+- Each table has a **unique QR code**
+- Customers scan the QR to access the menu
+- Table number is tracked throughout the session
+- Prevents manual table selection errors
+
+---
+
+### 2. Customer Ordering Workflow
+- Session-based cart system
+- Menu fetched via REST APIs
+- Add/remove items dynamically
+- Order placement through API endpoints
+- Order confirmation and status tracking
+
+---
+
+### 3. Admin Panel
+- Secure admin login
+- Menu management (add/edit/delete items)
+- View and manage orders
+- Generate table-specific QR codes
+- Separate admin routes and APIs
+
+---
+
+### 4. REST API Design
+- Backend logic exposed via **RESTful endpoints**
+- Frontend and backend are decoupled
+- Enables future mobile or kiosk integration
+
+Example:
+- `GET /api/menu`
+- `POST /api/order/place`
+- `GET /admin/api/orders`
+
+---
+
+### 5. Database Design (MSSQL)
+- Normalized relational schema
+- Tables include:
+  - Menu Items
+  - Orders
+  - Order Items
+  - Admin Users
+- Transaction-safe order creation
+- Database migrations handled using Flask-Migrate
+
+---
+
+### 6. Security Implementation
+- **CSRF protection** using WTForms
+- Session-based authentication
+- Route protection using decorators
+- Separate access control for admin and customers
+- Secure environment variables using `.env`
+
+---
+
+## Authentication & Session Management
+- Login & signup system
+- Optional 2FA verification flow
+- Secure logout handling
+- Session validation middleware
+
+---
+
+## Why This Is NOT a Basic Project
+Although the application is an order management system at a functional level, the **implementation follows production-level backend practices**, including:
+
+- Modular architecture using Blueprints
+- REST API-based communication
+- Secure form handling with CSRF protection
+- Real-world QR-based workflow
+- Role separation (Admin vs Customer)
+- MSSQL integration instead of lightweight databases
+- Migration-based schema evolution
+
+The complexity lies in **system design and backend engineering**, not just UI interactions.
+
+---
+
+## Future Enhancements
+- Real-time order status updates
+- Role-based access control (RBAC)
+- Analytics dashboard for sales insights
+- Multi-branch restaurant support
+- Payment gateway integration
+
+---
+
+## How to Run the Project
+1. Configure environment variables in `.env`
+2. Install dependencies
+3. Apply database migrations
+4. Run the application using `run.py`
+
+---
+
+## Conclusion
+This project demonstrates the application of **industry-level backend development concepts** within an academic problem statement, focusing on scalability, security, and maintainability.
+

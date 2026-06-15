@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu · Cozy Cafe Admin{% endblock %}
+{% block page_name %}Menu{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Page header ── -->
+<div class="mn-header">
+  <div class="mn-header__left">
+    <p class="mn-header__eyebrow">Menu Management</p>
+    <h1 class="mn-header__title">Your <em>Menu</em></h1>
+    <p class="mn-header__sub">Manage dishes, prices, categories and availability.</p>
+  </div>
+  <div class="mn-header__actions">
+    <button class="mn-btn mn-btn--ghost" id="btnManageCategories">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+      Categories
+    </button>
+    <button class="mn-btn mn-btn--primary" id="btnAddDish">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add Dish
+    </button>
+  </div>
+</div>
+
+<!-- ── Stats strip ── -->
+<div class="mn-stats">
+  <div class="mn-stat">
+    <span class="mn-stat__val" id="statTotal">{{ menu_items | length }}</span>
+    <span class="mn-stat__label">Total Dishes</span>
+  </div>
+  <div class="mn-stat">
+    <span class="mn-stat__val mn-stat__val--green" id="statAvailable">{{ menu_items | selectattr('is_available') | list | length }}</span>
+    <span class="mn-stat__label">Available</span>
+  </div>
+  <div class="mn-stat">
+    <span class="mn-stat__val mn-stat__val--muted" id="statHidden">{{ menu_items | rejectattr('is_available') | list | length }}</span>
+    <span class="mn-stat__label">Hidden</span>
+  </div>
+  <div class="mn-stat">
+    <span class="mn-stat__val mn-stat__val--amber" id="statCategories">{{ categories | length }}</span>
+    <span class="mn-stat__label">Categories</span>
+  </div>
+</div>
+
+<!-- ── Toolbar ── -->
+<div class="mn-toolbar">
+  <div class="mn-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="Search dishes…" autocomplete="off">
+    <button class="mn-search__clear" id="searchClear" style="display:none" aria-label="Clear search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="mn-filters" id="categoryFilters">
+    <button class="mn-filter mn-filter--active" data-cat="all">All</button>
+    {% for cat in categories %}
+    <button class="mn-filter" data-cat="{{ cat.id }}">{{ cat.name }}</button>
+    {% endfor %}
+  </div>
+
+  <div class="mn-toolbar__right">
+    <div class="mn-view-toggle">
+      <button class="mn-view-btn mn-view-btn--active" id="viewGrid" aria-label="Grid view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      </button>
+      <button class="mn-view-btn" id="viewList" aria-label="List view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <select class="mn-select" id="sortSelect">
+      <option value="default">Sort: Default</option>
+      <option value="name_asc">Name A–Z</option>
+      <option value="name_desc">Name Z–A</option>
+      <option value="price_asc">Price ↑</option>
+      <option value="price_desc">Price ↓</option>
+    </select>
+
+    <select class="mn-select" id="availFilter">
+      <option value="all">All Status</option>
+      <option value="available">Available</option>
+      <option value="hidden">Hidden</option>
+    </select>
+  </div>
+</div>
+
+<!-- ── Menu grid / list ── -->
+<div class="mn-grid" id="menuContainer">
+  {% if menu_items %}
+    {% for item in menu_items %}
+    <div class="mn-card"
+         data-id="{{ item.id }}"
+         data-cat="{{ item.category_id }}"
+         data-name="{{ item.item_name | lower }}"
+         data-price="{{ item.price }}"
+         data-avail="{{ 'available' if item.is_available else 'hidden' }}">
+
+      <!-- Image / placeholder -->
+      <div class="mn-card__img">
+        {% if item.image_url %}
+          <img src="{{ item.image_url }}" alt="{{ item.item_name }}" loading="lazy">
+        {% else %}
+          <div class="mn-card__img-placeholder" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+              <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+            </svg>
+          </div>
+        {% endif %}
+
+        <!-- Availability pill -->
+        <span class="mn-card__avail-badge mn-card__avail-badge--{{ 'on' if item.is_available else 'off' }}">
+          {{ 'Available' if item.is_available else 'Hidden' }}
+        </span>
+
+        <!-- Quick actions overlay -->
+        <div class="mn-card__overlay">
+          <button class="mn-card__ov-btn"
+                  onclick="editDish({{ item.id }})"
+                  aria-label="Edit {{ item.item_name }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="mn-card__ov-btn mn-card__ov-btn--toggle"
+                  onclick="toggleAvailability({{ item.id }}, {{ item.is_available | lower }})"
+                  aria-label="Toggle availability">
+            {% if item.is_available %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            {% else %}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            {% endif %}
+          </button>
+          <button class="mn-card__ov-btn mn-card__ov-btn--danger"
+                  onclick="confirmDelete({{ item.id }}, '{{ item.item_name }}')"
+                  aria-label="Delete {{ item.item_name }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card body -->
+      <div class="mn-card__body">
+        <div class="mn-card__meta">
+          <span class="mn-card__cat">{{ item.category.name if item.category else 'Uncategorised' }}</span>
+          {% if item.is_veg is not none %}
+            <span class="mn-card__veg {{ 'mn-card__veg--veg' if item.is_veg else 'mn-card__veg--nonveg' }}"
+                  title="{{ 'Veg' if item.is_veg else 'Non-veg' }}">
+              <span class="mn-card__veg-dot"></span>
+            </span>
+          {% endif %}
+        </div>
+        <h3 class="mn-card__name">{{ item.item_name }}</h3>
+        {% if item.description %}
+          <p class="mn-card__desc">{{ item.description }}</p>
+        {% endif %}
+        <div class="mn-card__footer">
+          <span class="mn-card__price">₹{{ "%.0f"|format(item.item_price) }}</span>
+          <button class="mn-card__edit-btn" onclick="editDish({{ item.id }})">Edit</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Empty state (shown via JS when filtered to nothing) -->
+  <div class="mn-empty" id="emptyState" style="display:none;">
+    <div class="mn-empty__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+        <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+      </svg>
+    </div>
+    <p class="mn-empty__title">No dishes found</p>
+    <p class="mn-empty__sub">Try a different filter or <button class="mn-empty__link" onclick="resetFilters()">clear all filters</button>.</p>
+  </div>
+
+  <!-- True empty (no dishes at all, shown via Jinja) -->
+  {% if not menu_items %}
+  <div class="mn-empty" id="trueEmpty">
+    <div class="mn-empty__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+        <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+      </svg>
+    </div>
+    <p class="mn-empty__title">Menu is empty</p>
+    <p class="mn-empty__sub">Add your first dish to get started.</p>
+    <button class="mn-btn mn-btn--primary" onclick="document.getElementById('btnAddDish').click()" style="margin-top:1rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Add First Dish
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══════════════════════════════════
+     ADD / EDIT DISH MODAL
+══════════════════════════════════ -->
+<div class="mn-modal-backdrop" id="dishModalBackdrop"></div>
+<div class="mn-modal" id="dishModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="mn-modal__head">
+    <h2 class="mn-modal__title" id="modalTitle">Add Dish</h2>
+    <button class="mn-modal__close" id="modalClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <form class="mn-modal__form" id="dishForm" novalidate>
+    <input type="hidden" id="dishId" name="id">
+
+    <div class="mn-form-row">
+      <div class="mn-field">
+        <label class="mn-label" for="fieldName">Dish Name <span class="mn-label__req">*</span></label>
+        <input class="mn-input" type="text" id="fieldName" name="item_name" placeholder="e.g. Masala Chai" required autocomplete="off">
+      </div>
+      <div class="mn-field mn-field--sm">
+        <label class="mn-label" for="fieldPrice">Price (₹) <span class="mn-label__req">*</span></label>
+        <input class="mn-input" type="number" id="fieldPrice" name="price" placeholder="0" min="0" step="0.01" required>
+      </div>
+    </div>
+
+    <div class="mn-form-row">
+      <div class="mn-field">
+        <label class="mn-label" for="fieldCategory">Category <span class="mn-label__req">*</span></label>
+        <select class="mn-input mn-select-field" id="fieldCategory" name="category_id" required>
+          <option value="">Select category…</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mn-field mn-field--sm">
+        <label class="mn-label">Type</label>
+        <div class="mn-veg-toggle">
+          <label class="mn-veg-opt mn-veg-opt--veg">
+            <input type="radio" name="is_veg" value="true">
+            <span class="mn-veg-dot mn-veg-dot--veg"></span>
+            Veg
+          </label>
+          <label class="mn-veg-opt mn-veg-opt--nonveg">
+            <input type="radio" name="is_veg" value="false">
+            <span class="mn-veg-dot mn-veg-dot--nonveg"></span>
+            Non-veg
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mn-field">
+      <label class="mn-label" for="fieldDesc">Description</label>
+      <textarea class="mn-input mn-textarea" id="fieldDesc" name="description" placeholder="Short description shown to customers…" rows="3"></textarea>
+    </div>
+
+    <div class="mn-field">
+      <label class="mn-label" for="fieldImage">Image URL</label>
+      <input class="mn-input" type="url" id="fieldImage" name="image_url" placeholder="https://…">
+    </div>
+
+    <div class="mn-field mn-field--row">
+      <label class="mn-switch" for="fieldAvail">
+        <input type="checkbox" id="fieldAvail" name="is_available" checked>
+        <span class="mn-switch__track"></span>
+        <span class="mn-switch__label">Available on menu</span>
+      </label>
+    </div>
+
+    <div class="mn-modal__foot">
+      <button type="button" class="mn-btn mn-btn--ghost" id="modalCancel">Cancel</button>
+      <button type="submit" class="mn-btn mn-btn--primary" id="modalSubmit">Add Dish</button>
+    </div>
+  </form>
+</div>
+
+<!-- ══════════════════════════════════
+     CONFIRM DELETE MODAL
+══════════════════════════════════ -->
+<div class="mn-modal-backdrop" id="deleteModalBackdrop"></div>
+<div class="mn-modal mn-modal--sm" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+  <div class="mn-modal__head">
+    <h2 class="mn-modal__title" id="deleteTitle">Delete Dish</h2>
+    <button class="mn-modal__close" id="deleteModalClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="mn-modal__body">
+    <div class="mn-delete-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+    </div>
+    <p class="mn-delete__text">Remove <strong id="deleteName"></strong> from your menu?<br>This cannot be undone.</p>
+  </div>
+  <div class="mn-modal__foot">
+    <button class="mn-btn mn-btn--ghost" id="deleteCancelBtn">Cancel</button>
+    <button class="mn-btn mn-btn--danger" id="deleteConfirmBtn">Delete Dish</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CATEGORIES MODAL
+══════════════════════════════════ -->
+<div class="mn-modal-backdrop" id="catModalBackdrop"></div>
+<div class="mn-modal mn-modal--sm" id="catModal" role="dialog" aria-modal="true" aria-labelledby="catTitle">
+  <div class="mn-modal__head">
+    <h2 class="mn-modal__title" id="catTitle">Categories</h2>
+    <button class="mn-modal__close" id="catModalClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="mn-modal__body">
+    <div class="mn-cat-list" id="catList">
+      {% for cat in categories %}
+      <div class="mn-cat-row" data-id="{{ cat.id }}">
+        <span class="mn-cat-row__name">{{ cat.name }}</span>
+        <button class="mn-cat-row__del" onclick="deleteCategory({{ cat.id }})" aria-label="Delete {{ cat.name }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="mn-cat-add">
+      <input class="mn-input" type="text" id="newCatInput" placeholder="New category name…" autocomplete="off">
+      <button class="mn-btn mn-btn--primary" id="addCatBtn">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="mn-toast" id="toast" role="status" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+{% endblock %}
