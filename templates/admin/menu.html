@@ -39,11 +39,11 @@
     <span class="mn-stat__label">Total Dishes</span>
   </div>
   <div class="mn-stat">
-    <span class="mn-stat__val mn-stat__val--green" id="statAvailable">{{ menu_items | selectattr('is_available') | list | length }}</span>
+    <span class="mn-stat__val mn-stat__val--green" id="statAvailable">{{ menu_items | selectattr('is_active') | list | length }}</span>
     <span class="mn-stat__label">Available</span>
   </div>
   <div class="mn-stat">
-    <span class="mn-stat__val mn-stat__val--muted" id="statHidden">{{ menu_items | rejectattr('is_available') | list | length }}</span>
+    <span class="mn-stat__val mn-stat__val--muted" id="statHidden">{{ menu_items | rejectattr('is_active') | list | length }}</span>
     <span class="mn-stat__label">Hidden</span>
   </div>
   <div class="mn-stat">
@@ -113,25 +113,24 @@
          data-id="{{ item.id }}"
          data-cat="{{ item.category_id }}"
          data-name="{{ item.item_name | lower }}"
-         data-price="{{ item.price }}"
-         data-avail="{{ 'available' if item.is_available else 'hidden' }}">
+         data-price="{{ item.item_price }}"
+         data-avail="{{ 'available' if item.is_active else 'hidden' }}">
 
       <!-- Image / placeholder -->
       <div class="mn-card__img">
         {% if item.image_url %}
-          <img src="{{ item.image_url }}" alt="{{ item.item_name }}" loading="lazy">
-        {% else %}
-          <div class="mn-card__img-placeholder" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
-              <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
-            </svg>
-          </div>
+          <img src="{{ item.image_url }}" alt="{{ item.item_name }}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
         {% endif %}
+        <div class="mn-card__img-placeholder" aria-hidden="true" style="{{ 'display:none' if item.image_url else '' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+            <line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>
+          </svg>
+        </div>
 
         <!-- Availability pill -->
-        <span class="mn-card__avail-badge mn-card__avail-badge--{{ 'on' if item.is_available else 'off' }}">
-          {{ 'Available' if item.is_available else 'Hidden' }}
+        <span class="mn-card__avail-badge mn-card__avail-badge--{{ 'on' if item.is_active else 'off' }}">
+          {{ 'Available' if item.is_active else 'Hidden' }}
         </span>
 
         <!-- Quick actions overlay -->
@@ -145,9 +144,9 @@
             </svg>
           </button>
           <button class="mn-card__ov-btn mn-card__ov-btn--toggle"
-                  onclick="toggleAvailability({{ item.id }}, {{ item.is_available | lower }})"
+                  onclick="toggleAvailability({{ item.id }}, {{ item.is_active | lower }})"
                   aria-label="Toggle availability">
-            {% if item.is_available %}
+            {% if item.is_active %}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
               <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
@@ -173,7 +172,7 @@
       <!-- Card body -->
       <div class="mn-card__body">
         <div class="mn-card__meta">
-          <span class="mn-card__cat">{{ item.category.name if item.category else 'Uncategorised' }}</span>
+          <span class="mn-card__cat">{{ item.category if item.category else 'Uncategorised' }}</span>
           {% if item.is_veg is not none %}
             <span class="mn-card__veg {{ 'mn-card__veg--veg' if item.is_veg else 'mn-card__veg--nonveg' }}"
                   title="{{ 'Veg' if item.is_veg else 'Non-veg' }}">

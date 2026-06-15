@@ -168,11 +168,11 @@ function updateCart(){
         html+=`<div class="cart-item">
             <div>
                 <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">₹${item.price}</div>
+                <div class="cart-item-price">₹${item.item_price}</div>
             </div>
             <button class="cart-remove" onclick="removeFromCart(${item.id})">Remove</button>
         </div>`;
-        total+=item.price;
+        total+=item.item_price;
     });
 
     cartItemsDiv.innerHTML=html;

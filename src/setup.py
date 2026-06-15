@@ -37,7 +37,7 @@ def setup():
             user.totp_enable = True
             db.session.commit()
             # Create proper session
-            SessionManager.create_user_session(session, user)
+            # SessionManager.create_user_session(session, user)
             session.permanent = False
             return redirect(url_for('admin.admin_dashboard'))
         else:
