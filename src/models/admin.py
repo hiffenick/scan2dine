@@ -1,7 +1,8 @@
 from src.extensions import db
+from flask_login import UserMixin
 import pyotp
 
-class User(db.Model):
+class User(db.Model,UserMixin):
     __tablename__ = 'User'
     id = db.Column(db.Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)

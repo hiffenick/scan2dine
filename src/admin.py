@@ -13,6 +13,7 @@ import base64
 import os
 from src.services.ip_services import get_local_ip
 from flask import current_app
+from flask_login import login_required
 
 
 admin_route = Blueprint('admin', __name__)
@@ -20,6 +21,7 @@ admin_route = Blueprint('admin', __name__)
 
 @admin_route.route('/', methods=['GET', 'POST'])
 @no_cache
+@login_required
 def adminhome():
     if 'user_id' not in session:
         return redirect(url_for('login.login'))
