@@ -10,6 +10,10 @@ class MenuItem(db.Model):
     item_price = db.Column(Numeric(10, 2), nullable=False)
     category = db.Column(db.String(50), nullable=False, default="General")
     description = db.Column(db.String(255), nullable=True)
+
+    is_veg = db.Column(db.Boolean, default=True)
+    image_url = db.Column(db.String(255), nullable=True)
+    
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
