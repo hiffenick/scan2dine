@@ -48,7 +48,7 @@
         <span class="sb-link__text">Dashboard</span>
       </a>
 
-      <a href="{{ url_for('menu.menu') }}"
+      <a href="{{ url_for('admin.menu') }}"
          class="sb-link {% if active_page == 'menu' %}sb-link--active{% endif %}">
         <span class="sb-link__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -59,7 +59,7 @@
         <span class="sb-link__text">Menu</span>
       </a>
 
-      <a href="{{ url_for('admin.get_orders') }}"
+      <a href="{{ url_for('admin.get_orders_page') }}"
          class="sb-link {% if active_page == 'orders' %}sb-link--active{% endif %}">
         <span class="sb-link__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

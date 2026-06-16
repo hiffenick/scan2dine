@@ -7,27 +7,21 @@ class Order(db.Model):
 
     __table_args__ = (
     CheckConstraint(
-        "status IN ('Pending', 'Completed', 'Cancelled')",
+        "status IN ('Pending', 'Preparing', 'Served', 'Closed', 'Cancelled')",
         name="check_order_status"
     ),
     )
 
-
     id = db.Column(db.Integer, primary_key=True)
-
     customer_name = db.Column(db.String(100), nullable=False)
-
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
-
     table_no = db.Column(db.Integer, nullable=False)
+    payment_status = db.Column(db.String(20), nullable=False, default='unpaid')
+    payment_method = db.Column(db.String(20), nullable=True)
+    payment_reference  = db.Column(db.String(100), nullable=True)
 
-
-    status = db.Column(
-        db.String(20),
-        nullable=False,
-        default="Pending"
-    )
-
+    status = db.Column(db.String(20),nullable=False,default="Pending",server_default="Pending")
+    paid_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship(

@@ -6,7 +6,7 @@ from flask_login import current_user
 menuroute = Blueprint('menu', __name__)
 
 def login_required_session():
-    return 'user_id' not in session
+    return not current_user.is_authenticated
 
 # ── Page ──────────────────────────────────────────────────
 from src.models.category import Category
