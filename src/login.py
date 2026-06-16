@@ -78,21 +78,17 @@ def verify_2fa():
 
     form = VerifyForm()
 
-    if request.method == "POST":
+    user = User.query.get(session.get("pending_user_id"))
+    if not user:
+        return redirect(url_for("login.login"))
+
+    if form.validate_on_submit():
 
         code = form.verify_code.data
-
-        user = User.query.get(session.get("pending_user_id"))
-
-        if not user:
-            return redirect(url_for("login.login"))
-
         totp = pyotp.TOTP(user.totp_secret)
 
         if totp.verify(code):
-
-            login_user(user)   
-
+            login_user(user)
             session.pop("pending_user_id", None)
 
             print("VERIFY SESSION:")
@@ -102,13 +98,7 @@ def verify_2fa():
 
         flash("Invalid Code")
 
-        print("VERIFY SESSION:")
-        print(dict(session))
-
-    return render_template(
-        "verify_2fa.html",
-        form=form
-    )
+    return render_template("verify_2fa.html", form=form)
 
 def handle_2fa_verification(user, form):
     """

@@ -10,22 +10,104 @@ from datetime import datetime
 
 from . import admin_bp
 
+# @login_required
+# @no_cache
+# @admin_bp.route("/api/orders")
+# def get_orders():
+#     orders = Order.query.all()
+#     return jsonify([
+#         {
+#             "id": o.id,
+#             "customer": o.customer_name,
+#             "table_no": int(o.table_no),
+#             "total": float(o.total_amount),
+#             "status": o.status,
+#             "created_at": o.created_at.strftime("%Y-%m-%d")
+#         }
+#         for o in orders
+#     ])
+
+@admin_bp.route("/api/orders")
 @login_required
 @no_cache
-@admin_bp.route("/api/orders")
 def get_orders():
-    orders = Order.query.all()
+    orders = Order.query.order_by(Order.created_at.desc()).all()
     return jsonify([
         {
-            "id": o.id,
+            "id": f"ORD-{o.id}",
+            "table": int(o.table_no),
             "customer": o.customer_name,
-            "table_no": int(o.table_no),
-            "total": float(o.total_amount),
             "status": o.status,
-            "created_at": o.created_at.strftime("%Y-%m-%d")
+            "payment_status": o.payment_status,
+            "payment_method": o.payment_method,
+            "payment_reference": o.payment_reference,
+            "total": float(o.total_amount),
+            "paid_at": o.paid_at.isoformat() if o.paid_at else None,
+            "created_at": o.created_at.isoformat(),
+            "items": [
+                {
+                    "name": i.menu_item.item_name,
+                    "qty": i.quantity,
+                    "price": float(i.price_at_time)
+                }
+                for i in o.items
+            ]
         }
         for o in orders
     ])
+
+
+@admin_bp.route("/orders")
+@login_required
+@no_cache
+def get_orders_page():
+    return render_template("admin/orders.html", active_page="orders")
+
+@admin_bp.route("/api/orders/<int:order_id>/status", methods=["PATCH"])
+@login_required
+@csrf.exempt
+def update_order_status(order_id):
+    order = Order.query.get_or_404(order_id)
+    data = request.get_json()
+    new_status = data.get("status")
+
+    VALID = ['Pending', 'Preparing', 'Served', 'Closed', 'Cancelled']
+    if new_status not in VALID:
+        return jsonify({"error": "Invalid status"}), 400
+
+    if new_status == 'Closed' and order.payment_status != 'paid':
+        return jsonify({"error": "Cannot close an unpaid order"}), 400
+
+    order.status = new_status
+
+    # Release table only when fully closed + paid
+    if new_status == 'Closed':
+        from src.services.qr_token import release_table
+        release_table(order.table_no)
+
+    db.session.commit()
+    return jsonify({"success": True, "status": order.status})
+
+
+@admin_bp.route("/api/orders/<int:order_id>/payment", methods=["PATCH"])
+@login_required
+@csrf.exempt
+def update_payment_status(order_id):
+    order = Order.query.get_or_404(order_id)
+    data = request.get_json()
+
+    order.payment_status    = data.get("payment_status",    order.payment_status)
+    order.payment_method    = data.get("payment_method",    order.payment_method)
+    order.payment_reference = data.get("payment_reference", order.payment_reference)
+
+    if order.payment_status == 'paid' and not order.paid_at:
+        order.paid_at = datetime.utcnow()
+    if order.payment_status == 'unpaid':
+        order.paid_at = None
+
+    db.session.commit()
+    return jsonify({"success": True, "payment_status": order.payment_status})
+
 
 @login_required
 @no_cache

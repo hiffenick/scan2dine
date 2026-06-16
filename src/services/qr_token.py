@@ -55,9 +55,18 @@ def get_table_lock(table_number):
 
 def release_table(table_number):
     """Called when admin marks order completed/cancelled."""
-    locked = get_table_lock(table_number)
-    if locked:
-        old_session = locked.get("session_id")
-        if old_session:
-            _redis().delete(f"customer_session:{old_session}")
-    _redis().delete(f"table_lock:{table_number}")
+    try:
+        r = _redis()
+        if r is None:
+            print(f"Warning: Redis client not available, skipping release_table for table {table_number}")
+            return
+
+        locked = get_table_lock(table_number)
+        if locked:
+            old_session = locked.get("session_id")
+            if old_session:
+                r.delete(f"customer_session:{old_session}")
+        r.delete(f"table_lock:{table_number}")
+
+    except Exception as e:
+        print(f"Warning: release_table failed for table {table_number}: {e}")

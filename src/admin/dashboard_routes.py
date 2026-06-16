@@ -12,30 +12,23 @@ from src.wtforms import CSRForm, MenuItemForm, MenuEditForm
 from . import admin_bp
 
 
+from flask_login import current_user, login_required
+
 @admin_bp.route("/")
+@login_required
 def admin_dashboard():
 
     form = MenuItemForm()
     edit_form = MenuEditForm()
 
-    print("ADMIN SESSION:")
-    print(dict(session))
+    print("ADMIN USER:", current_user)
 
-    user_id = session.get("user_id")
-
-    if not user_id:
-        return redirect(url_for("login.login"))
-
-    user = User.query.get(user_id)
-
-    if user is None:
-        session.clear()
-        return redirect(url_for("login.login"))
+    user = current_user
 
     return render_template(
         "admin.html",
         user=user,
         revenue_today=1000,
         form=form,
-        edit_form = edit_form
+        edit_form=edit_form
     )
