@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Tables & QR · Cozy Cafe Admin{% endblock %}
+{% block page_name %}Tables{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tables.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="tbl-header">
+  <div>
+    <p class="tbl-eyebrow">Table Management</p>
+    <h1 class="tbl-title">Tables <em>&amp; QR</em></h1>
+    <p class="tbl-subtitle">Generate, view, and manage QR codes for every table.</p>
+  </div>
+  <div class="tbl-header-actions">
+    <button class="btn-ghost" id="refreshBtn" onclick="refreshTables()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+      </svg>
+      Refresh
+    </button>
+    <button class="btn-ghost" onclick="openGenerateModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New QR
+    </button>
+  </div>
+</div>
+
+<!-- ── Stats Strip ── -->
+<div class="tbl-stats-strip">
+  <div class="tbl-stat">
+    <span class="tbl-stat__num" id="statTotal">–</span>
+    <span class="tbl-stat__label">Total Tables</span>
+  </div>
+  <div class="tbl-stat-divider"></div>
+  <div class="tbl-stat">
+    <span class="tbl-stat__num tbl-stat__num--lime" id="statActive">–</span>
+    <span class="tbl-stat__label">Active QRs</span>
+  </div>
+  <div class="tbl-stat-divider"></div>
+  <div class="tbl-stat">
+    <span class="tbl-stat__num tbl-stat__num--amber" id="statInactive">–</span>
+    <span class="tbl-stat__label">Inactive QRs</span>
+  </div>
+  <div class="tbl-stat-divider"></div>
+  <div class="tbl-stat">
+    <span class="tbl-stat__num tbl-stat__num--blue" id="statUnassigned">–</span>
+    <span class="tbl-stat__label">No QR Yet</span>
+  </div>
+</div>
+
+<!-- ── Search & Filter ── -->
+<div class="tbl-filters">
+  <div class="tbl-search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="searchInput" class="tbl-search" placeholder="Search by table number…" oninput="filterTables()">
+  </div>
+  <div class="tbl-filter-tabs">
+    <button class="tbl-tab tbl-tab--active" data-filter="all"      onclick="setFilter(this)">All</button>
+    <button class="tbl-tab"                  data-filter="active"   onclick="setFilter(this)">
+      <span class="tab-dot tab-dot--active"></span>Active
+    </button>
+    <button class="tbl-tab"                  data-filter="inactive" onclick="setFilter(this)">
+      <span class="tab-dot tab-dot--inactive"></span>Inactive
+    </button>
+    <button class="tbl-tab"                  data-filter="none"     onclick="setFilter(this)">
+      <span class="tab-dot tab-dot--none"></span>No QR
+    </button>
+  </div>
+</div>
+
+<!-- ── Table Grid ── -->
+<div class="tbl-grid" id="tableGrid"></div>
+
+<div class="tbl-empty" id="tableEmpty" style="display:none;">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" width="48" height="48">
+    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+  </svg>
+  <p>No tables match your filter</p>
+  <span>Try a different search or filter</span>
+</div>
+
+<!-- ── QR Detail Modal ── -->
+<div class="tbl-modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+<div class="tbl-modal" id="tableModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="tbl-modal-header">
+    <div>
+      <p class="tbl-modal-eyebrow" id="modalEyebrow">TABLE</p>
+      <h2 class="tbl-modal-title" id="modalTitle">–</h2>
+    </div>
+    <button class="tbl-modal-close" onclick="closeModal()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="tbl-modal-body" id="modalBody"></div>
+  <div class="tbl-modal-footer" id="modalFooter"></div>
+</div>
+
+<!-- ── Generate QR Modal ── -->
+<div class="tbl-modal-backdrop" id="genBackdrop" onclick="closeGenerateModal()"></div>
+<div class="tbl-modal tbl-modal--sm" id="genModal" role="dialog" aria-modal="true">
+  <div class="tbl-modal-header">
+    <div>
+      <p class="tbl-modal-eyebrow">NEW QR CODE</p>
+      <h2 class="tbl-modal-title">Generate QR</h2>
+    </div>
+    <button class="tbl-modal-close" onclick="closeGenerateModal()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="tbl-modal-body">
+    <p class="tbl-field-label">Table Number</p>
+    <input type="number" id="genTableInput" class="tbl-input" min="1" max="100" placeholder="e.g. 5">
+    <p class="tbl-field-hint">A new QR code will be created and linked to this table.</p>
+  </div>
+  <div class="tbl-modal-footer">
+    <button class="tbl-btn tbl-btn--primary" onclick="generateQR()">Generate</button>
+    <button class="tbl-btn tbl-btn--ghost"   onclick="closeGenerateModal()">Cancel</button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/tables.js') }}"></script>
+{% endblock %}
