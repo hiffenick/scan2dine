@@ -20,16 +20,28 @@
   });
 
   /* ══ DATA ══ */
-  function loadTables() {
-    return fetch('/admin/api/all-table-qrs')
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        allQRs = data;
+function loadTables() {
+  return fetch('/admin/api/all-table-qrs')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+
+      // ✅ SAFE CHECK
+      if (!Array.isArray(data)) {
+        console.error("Invalid API response:", data);
+        allQRs = [];
         updateStats();
         renderGrid();
-      })
-      .catch(function (err) { console.error('Tables fetch failed:', err); });
-  }
+        return;
+      }
+
+      allQRs = data;
+      updateStats();
+      renderGrid();
+    })
+    .catch(function (err) {
+      console.error('Tables fetch failed:', err);
+    });
+}
 
   window.refreshTables = function () {
     var btn = document.getElementById('refreshBtn');

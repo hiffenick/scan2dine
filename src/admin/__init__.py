@@ -7,3 +7,4 @@ from .menu_routes import *
 from .orders_routes import *
 from .qr_routes import *
 from .settings_routes import *
+from .payment import *
