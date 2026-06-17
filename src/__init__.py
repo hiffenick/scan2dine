@@ -14,6 +14,7 @@ from src.models.menu import MenuItem
 from src.models.order import Order
 from src.models.category import Category
 from src.models.order_item import OrderItem
+from src.models.qr_code import QRCode
 from src.customer.menu_services import customer_menu
 from src.setup import setuproute
 from src.test import test_route
@@ -22,6 +23,7 @@ from src.admin import admin_bp
 from src.customer.order import customer_order_bp
 from src.customer.greating import greeting
 from src.extensions import login_manager
+from src.models.paymentqr import PaymentSetting
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 templatefolder = os.path.join(os.path.dirname(basedir),'templates')

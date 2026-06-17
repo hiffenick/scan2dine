@@ -97,7 +97,7 @@
         <span class="sb-link__text">Profile</span>
       </a>
 
-      <a href="/admin/settings"
+      <a href="{{ url_for('admin.payment') }}"
          class="sb-link {% if active_page == 'settings' %}sb-link--active{% endif %}">
         <span class="sb-link__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

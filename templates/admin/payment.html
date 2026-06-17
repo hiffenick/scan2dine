@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+{% block title %}Payments / UPI · Cozy Cafe Admin{% endblock %}
+{% block page_name %}Payments / UPI{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/payment.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- ══════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════ -->
+<div class="pay-header">
+  <div>
+    <p class="pay-eyebrow">PAYMENT CONFIGURATION</p>
+    <h1 class="pay-title">Payments &amp; <em>UPI Management</em></h1>
+    <p class="pay-subtitle">Manage payment details, QR codes, and payment settings securely.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOP STAT CARDS
+══════════════════════════════════════ -->
+<div class="pay-stats">
+
+  <div class="pay-stat-card">
+    <div class="pay-stat-card__icon pay-stat-card__icon--amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+      </svg>
+    </div>
+    <div class="pay-stat-card__body">
+      <span class="pay-stat-card__label">Current UPI ID</span>
+      <span class="pay-stat-card__value" id="stat-upi-id">cozycafe@upi</span>
+    </div>
+  </div>
+
+  <div class="pay-stat-card">
+    <div class="pay-stat-card__icon pay-stat-card__icon--green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+    </div>
+    <div class="pay-stat-card__body">
+      <span class="pay-stat-card__label">QR Status</span>
+      <span class="pay-stat-card__value">
+        <span class="tag tag--green">Active</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="pay-stat-card">
+    <div class="pay-stat-card__icon pay-stat-card__icon--blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div class="pay-stat-card__body">
+      <span class="pay-stat-card__label">Last Updated</span>
+      <span class="pay-stat-card__value">12 Jun 2026</span>
+    </div>
+  </div>
+
+  <div class="pay-stat-card">
+    <div class="pay-stat-card__icon pay-stat-card__icon--amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+    </div>
+    <div class="pay-stat-card__body">
+      <span class="pay-stat-card__label">Security Status</span>
+      <span class="pay-stat-card__value">
+        <span class="tag tag--amber">2FA On</span>
+      </span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN TWO-COLUMN LAYOUT
+══════════════════════════════════════ -->
+<div class="pay-grid">
+
+  <!-- ── LEFT: Payment Information ── -->
+  <div class="pay-card">
+    <div class="pay-card__head">
+      <div class="pay-card__head-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="pay-card__title">Payment Information</h2>
+        <p class="pay-card__sub">UPI credentials and account details</p>
+      </div>
+      <span class="tag tag--green pay-card__status-tag">Verified</span>
+    </div>
+
+    <div class="pay-card__body">
+      <div class="pay-form-group">
+        <label class="pay-label" for="upi-id">
+          UPI ID
+          <span class="pay-label__badge">Read-only</span>
+        </label>
+        <div class="pay-input-wrap pay-input-wrap--readonly">
+          <svg class="pay-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          <input type="text" id="upi-id" class="pay-input" value="cozycafe@upi" readonly>
+          <button class="pay-input-copy" title="Copy UPI ID" onclick="copyUpiId()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="pay-form-group">
+        <label class="pay-label" for="account-name">Account Holder Name</label>
+        <div class="pay-input-wrap pay-input-wrap--readonly">
+          <svg class="pay-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input type="text" id="account-name" class="pay-input" value="Cozy Cafe Pvt. Ltd." readonly>
+        </div>
+      </div>
+
+      <div class="pay-form-group">
+        <label class="pay-label" for="pay-instructions">Payment Instructions</label>
+        <textarea id="pay-instructions" class="pay-textarea" rows="3" readonly>Please scan the QR code or use the UPI ID above to pay. Mention your table number in the remarks.</textarea>
+      </div>
+
+      <div class="pay-actions">
+        <button class="pay-btn pay-btn--primary" id="btn-edit" onclick="openAuthModal('edit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit Payment Details
+        </button>
+        <button class="pay-btn pay-btn--ghost" id="btn-save" style="display:none;" onclick="savePaymentDetails()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save Changes
+        </button>
+        <button class="pay-btn pay-btn--danger-ghost" id="btn-cancel" style="display:none;" onclick="cancelEdit()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: QR Code ── -->
+  <div class="pay-card">
+    <div class="pay-card__head">
+      <div class="pay-card__head-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="pay-card__title">UPI QR Code</h2>
+        <p class="pay-card__sub">Displayed to customers at checkout</p>
+      </div>
+      <span class="tag tag--green pay-card__status-tag" id="qr-status-tag">Active</span>
+    </div>
+
+    <div class="pay-card__body">
+      <!-- QR Preview Area -->
+      <div class="pay-qr-zone" id="qr-zone">
+        <div class="pay-qr-frame" id="qr-frame">
+          <!-- Placeholder QR (SVG pattern) -->
+          <svg class="pay-qr-placeholder" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" id="qr-placeholder">
+            <!-- Finder patterns -->
+            <rect x="10" y="10" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+            <rect x="15" y="15" width="20" height="20" rx="1" fill="currentColor"/>
+            <rect x="80" y="10" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+            <rect x="85" y="15" width="20" height="20" rx="1" fill="currentColor"/>
+            <rect x="10" y="80" width="30" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="3"/>
+            <rect x="15" y="85" width="20" height="20" rx="1" fill="currentColor"/>
+            <!-- Data dots (stylized) -->
+            <rect x="50" y="10" width="5" height="5" fill="currentColor"/>
+            <rect x="58" y="10" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="10" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="18" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="18" width="5" height="5" fill="currentColor"/>
+            <rect x="58" y="26" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="58" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="74" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="82" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="90" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="98" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="82" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="98" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="58" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="74" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="90" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="74" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="82" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="98" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="82" width="5" height="5" fill="currentColor"/>
+            <rect x="58" y="82" width="5" height="5" fill="currentColor"/>
+            <rect x="74" y="82" width="5" height="5" fill="currentColor"/>
+            <rect x="90" y="82" width="5" height="5" fill="currentColor"/>
+            <rect x="50" y="90" width="5" height="5" fill="currentColor"/>
+            <rect x="66" y="90" width="5" height="5" fill="currentColor"/>
+            <rect x="82" y="90" width="5" height="5" fill="currentColor"/>
+            <rect x="98" y="90" width="5" height="5" fill="currentColor"/>
+            <rect x="10" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="18" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="26" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="34" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="42" y="50" width="5" height="5" fill="currentColor"/>
+            <rect x="10" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="26" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="42" y="58" width="5" height="5" fill="currentColor"/>
+            <rect x="10" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="18" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="34" y="66" width="5" height="5" fill="currentColor"/>
+            <rect x="10" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="26" y="74" width="5" height="5" fill="currentColor"/>
+            <rect x="42" y="74" width="5" height="5" fill="currentColor"/>
+          </svg>
+          <!-- Uploaded QR image (hidden until uploaded) -->
+          <img id="qr-img" class="pay-qr-img" src="" alt="UPI QR Code" style="display:none;">
+        </div>
+
+        <div class="pay-qr-meta">
+          <p class="pay-qr-meta__id" id="qr-upi-label">cozycafe@upi</p>
+          <p class="pay-qr-meta__hint">Scan to pay · Any UPI app</p>
+        </div>
+      </div>
+
+      <!-- Hidden file input -->
+      <input type="file" id="qr-upload-input" accept="image/*" style="display:none;" onchange="handleQrUpload(event)">
+
+      <div class="pay-actions pay-actions--qr">
+        <button class="pay-btn pay-btn--primary" onclick="openAuthModal('qr')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+          </svg>
+          Upload New QR
+        </button>
+        <button class="pay-btn pay-btn--ghost" onclick="downloadQr()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.11"/>
+          </svg>
+          Download QR
+        </button>
+        <button class="pay-btn pay-btn--danger-ghost" onclick="openAuthModal('remove-qr')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+          Remove QR
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /pay-grid -->
+
+<!-- ══════════════════════════════════════
+     SECURITY SECTION
+══════════════════════════════════════ -->
+<div class="pay-card pay-card--security">
+  <div class="pay-card__head">
+    <div class="pay-card__head-icon pay-card__head-icon--amber">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <div>
+      <h2 class="pay-card__title">Secure Access</h2>
+      <p class="pay-card__sub">This section contains sensitive payment information. All changes require verification.</p>
+    </div>
+  </div>
+
+  <div class="pay-security-grid">
+    <div class="pay-security-item">
+      <div class="pay-security-item__icon pay-security-item__icon--green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <div class="pay-security-item__body">
+        <span class="pay-security-item__name">Password Verification</span>
+        <span class="pay-security-item__desc">Required before any payment setting is changed</span>
+      </div>
+      <span class="tag tag--green">Required</span>
+    </div>
+
+    <div class="pay-security-item">
+      <div class="pay-security-item__icon pay-security-item__icon--amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      </div>
+      <div class="pay-security-item__body">
+        <span class="pay-security-item__name">Two-Factor Authentication</span>
+        <span class="pay-security-item__desc">TOTP code from your authenticator app</span>
+      </div>
+      <span class="tag tag--amber">Enabled</span>
+    </div>
+
+    <div class="pay-security-item">
+      <div class="pay-security-item__icon pay-security-item__icon--blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="pay-security-item__body">
+        <span class="pay-security-item__name">Session Timeout</span>
+        <span class="pay-security-item__desc">Admin session expires after 60 minutes of inactivity</span>
+      </div>
+      <span class="tag tag--stone">60 min</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     RECENT ACTIVITY
+══════════════════════════════════════ -->
+<div class="pay-card">
+  <div class="pay-card__head">
+    <div class="pay-card__head-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </div>
+    <div>
+      <h2 class="pay-card__title">Recent Activity</h2>
+      <p class="pay-card__sub">Audit log of recent payment configuration changes</p>
+    </div>
+  </div>
+
+  <div class="pay-card__body">
+    <div class="pay-timeline">
+
+      <div class="pay-timeline__item">
+        <div class="pay-timeline__dot pay-timeline__dot--green"></div>
+        <div class="pay-timeline__connector"></div>
+        <div class="pay-timeline__content">
+          <div class="pay-timeline__top">
+            <span class="pay-timeline__event">UPI ID Updated</span>
+            <span class="tag tag--green">Success</span>
+          </div>
+          <p class="pay-timeline__detail">Changed from <code>oldcafe@paytm</code> to <code>cozycafe@upi</code></p>
+          <span class="pay-timeline__time">12 Jun 2026 · 14:32</span>
+        </div>
+      </div>
+
+      <div class="pay-timeline__item">
+        <div class="pay-timeline__dot pay-timeline__dot--amber"></div>
+        <div class="pay-timeline__connector"></div>
+        <div class="pay-timeline__content">
+          <div class="pay-timeline__top">
+            <span class="pay-timeline__event">QR Code Replaced</span>
+            <span class="tag tag--amber">Changed</span>
+          </div>
+          <p class="pay-timeline__detail">New QR uploaded for UPI ID <code>cozycafe@upi</code></p>
+          <span class="pay-timeline__time">12 Jun 2026 · 14:30</span>
+        </div>
+      </div>
+
+      <div class="pay-timeline__item">
+        <div class="pay-timeline__dot pay-timeline__dot--blue"></div>
+        <div class="pay-timeline__connector"></div>
+        <div class="pay-timeline__content">
+          <div class="pay-timeline__top">
+            <span class="pay-timeline__event">Security Verification Completed</span>
+            <span class="tag tag--stone">Auth</span>
+          </div>
+          <p class="pay-timeline__detail">2FA TOTP verified successfully by admin</p>
+          <span class="pay-timeline__time">12 Jun 2026 · 14:29</span>
+        </div>
+      </div>
+
+      <div class="pay-timeline__item">
+        <div class="pay-timeline__dot pay-timeline__dot--dust"></div>
+        <div class="pay-timeline__content">
+          <div class="pay-timeline__top">
+            <span class="pay-timeline__event">Payment Instructions Updated</span>
+            <span class="tag tag--stone">Info</span>
+          </div>
+          <p class="pay-timeline__detail">Checkout message updated to include table number reminder</p>
+          <span class="pay-timeline__time">08 Jun 2026 · 10:14</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     AUTH MODAL (2-Step Verification)
+══════════════════════════════════════ -->
+<div class="pay-modal-backdrop" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="pay-modal">
+
+    <!-- Modal Header -->
+    <div class="pay-modal__head">
+      <div class="pay-modal__head-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="pay-modal__title" id="modal-title">Identity Verification</h3>
+        <p class="pay-modal__sub">Two-step security check required</p>
+      </div>
+      <button class="pay-modal__close" onclick="closeAuthModal()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="pay-modal__steps">
+      <div class="pay-modal__step pay-modal__step--active" id="step-indicator-1">
+        <div class="pay-modal__step-num">1</div>
+        <span>Password</span>
+      </div>
+      <div class="pay-modal__step-line"></div>
+      <div class="pay-modal__step" id="step-indicator-2">
+        <div class="pay-modal__step-num">2</div>
+        <span>TOTP Code</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Password -->
+    <div class="pay-modal__step-content" id="modal-step-1">
+      <p class="pay-modal__desc">Enter your account password to continue.</p>
+      <div class="pay-form-group">
+        <label class="pay-label" for="modal-password">Account Password</label>
+        <div class="pay-input-wrap">
+          <svg class="pay-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          <input type="password" id="modal-password" class="pay-input" placeholder="Enter your password">
+          <button class="pay-input-copy pay-input-toggle" onclick="togglePasswordVisibility('modal-password', this)" title="Show/hide password" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <span class="pay-field-error" id="password-error"></span>
+      </div>
+      <div class="pay-modal__footer">
+        <button class="pay-btn pay-btn--ghost" onclick="closeAuthModal()">Cancel</button>
+        <button class="pay-btn pay-btn--primary" onclick="verifyPassword()">
+          Continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: TOTP -->
+    <div class="pay-modal__step-content" id="modal-step-2" style="display:none;">
+      <p class="pay-modal__desc">Enter the 6-digit code from your authenticator app.</p>
+      <div class="pay-otp-group">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 0)" onkeydown="otpKeydown(event, 0)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 1)" onkeydown="otpKeydown(event, 1)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 2)" onkeydown="otpKeydown(event, 2)">
+        <div class="pay-otp-sep">—</div>
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 3)" onkeydown="otpKeydown(event, 3)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 4)" onkeydown="otpKeydown(event, 4)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 5)" onkeydown="otpKeydown(event, 5)">
+      </div>
+      <span class="pay-field-error" id="totp-error"></span>
+      <div class="pay-modal__footer">
+        <button class="pay-btn pay-btn--ghost" onclick="goBackToStep1()">Back</button>
+        <button class="pay-btn pay-btn--primary" onclick="verifyTotp()">
+          Verify &amp; Proceed
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="pay-toast" id="pay-toast" role="status" aria-live="polite"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+{% endblock %}
