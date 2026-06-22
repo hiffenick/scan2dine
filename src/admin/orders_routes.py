@@ -1,5 +1,5 @@
 from flask import jsonify, render_template, request
-from flask_login import login_required
+from flask_login import login_required,current_user
 from src import db
 from src.auth.decorators import no_cache
 from src.models.order import Order
@@ -7,6 +7,7 @@ from src.models.order_item import OrderItem
 from src.models.menu import MenuItem
 from src.extensions import csrf
 from datetime import datetime
+from src.services.activity import log_activity
 
 from . import admin_bp
 
@@ -86,6 +87,7 @@ def update_order_status(order_id):
         release_table(order.table_no)
 
     db.session.commit()
+    log_activity(current_user.id, "order", f"Updated order #ORD-{order.id} → {order.status}")
     return jsonify({"success": True, "status": order.status})
 
 
@@ -106,6 +108,7 @@ def update_payment_status(order_id):
         order.paid_at = None
 
     db.session.commit()
+    log_activity(current_user.id, "order", f"Marked order #ORD-{order.id} as {order.payment_status}")
     return jsonify({"success": True, "payment_status": order.payment_status})
 
 
@@ -266,7 +269,7 @@ def create_order():
         db.session.commit()
         print(f"✅ SUCCESS: Order #{new_order.id} created - Total=₹{total}, Items={len(validated_items)}")
         print(f"{'='*60}\n")
-        
+        log_activity(current_user.id, "order", f"Created order #ORD-{new_order.id} for {customer_name} (Table {table_no})")
         return jsonify({
             "success": True,
             "message": "Order created successfully",

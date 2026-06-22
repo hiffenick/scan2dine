@@ -10,7 +10,8 @@ from src.wtforms import LoginForm
 from src.auth import UserService, SessionManager
 from src.auth.decorators import no_cache
 import pyotp
-
+from src.services.activity import log_activity, get_client_ip , parse_user_agent
+from datetime import datetime, timezone
 login_route = Blueprint('login', __name__)
 
 
@@ -98,8 +99,12 @@ def verify_2fa():
             login_user(user)
             session.pop("pending_user_id", None)
 
-            print("VERIFY SESSION:")
-            print(dict(session))
+            ua = request.headers.get("User-Agent", "")
+            browser, os_name = parse_user_agent(ua)
+            log_activity(user.id, "login", f"Signed in from {browser} · {os_name}")
+
+            session["login_time"] = datetime.now(timezone.utc).isoformat()
+            session["client_ip"] = get_client_ip()
 
             return redirect(url_for("admin.admin_dashboard"))
 

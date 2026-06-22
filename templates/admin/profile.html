@@ -171,19 +171,19 @@
       <div class="prof-session-grid">
         <div class="prof-session-card">
           <div class="prof-session-card__label">Last Login</div>
-          <div class="prof-session-card__value" id="lastLoginTime">—</div>
+          <div class="prof-session-card__value" id="lastLoginTime">{{ last_login }}</div>
         </div>
         <div class="prof-session-card">
           <div class="prof-session-card__label">Device</div>
-          <div class="prof-session-card__value" id="deviceInfo">—</div>
+          <div class="prof-session-card__value" id="deviceInfo">{{ device_info }}</div>
         </div>
         <div class="prof-session-card">
           <div class="prof-session-card__label">Session Duration</div>
-          <div class="prof-session-card__value" id="sessionDuration">—</div>
+          <div class="prof-session-card__value" id="sessionDuration" data-start-seconds="{{ session_duration_seconds }}">—</div>
         </div>
         <div class="prof-session-card">
           <div class="prof-session-card__label">IP Address</div>
-          <div class="prof-session-card__value" id="ipAddress">—</div>
+          <div class="prof-session-card__value" id="ipAddress">{{ client_ip }}</div>
         </div>
       </div>
 

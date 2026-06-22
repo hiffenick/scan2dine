@@ -345,67 +345,28 @@
   /* ══════════════════════════════════════════════════
      ACTIVITY — SESSION INFO
   ══════════════════════════════════════════════════ */
-  function populateSessionInfo() {
-    // Last login from sessionStorage (set on login; backend may pass via template)
-    var lastLogin = sessionStorage.getItem('cozy_last_login') || '—';
-    var lastLoginEl = document.getElementById('lastLoginTime');
-    if (lastLoginEl) {
-      if (lastLogin !== '—') {
-        try {
-          var d = new Date(lastLogin);
-          lastLoginEl.textContent = d.toLocaleString('en-IN', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-          });
-        } catch (_) { lastLoginEl.textContent = lastLogin; }
-      } else {
-        // Fallback: show current session start (page load)
-        var now = new Date();
-        lastLoginEl.textContent = now.toLocaleString('en-IN', {
-          day: '2-digit', month: 'short', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      }
-    }
+function populateSessionInfo() {
+  // Last login and device are now server-rendered directly in the HTML — nothing to do.
 
-    // Device / browser
-    var ua = navigator.userAgent;
-    var browser = 'Unknown';
-    if (/Edg/.test(ua))     browser = 'Microsoft Edge';
-    else if (/Chrome/.test(ua))  browser = 'Chrome';
-    else if (/Firefox/.test(ua)) browser = 'Firefox';
-    else if (/Safari/.test(ua))  browser = 'Safari';
-    var os = 'Unknown OS';
-    if (/Windows/.test(ua))       os = 'Windows';
-    else if (/Macintosh/.test(ua)) os = 'macOS';
-    else if (/Linux/.test(ua))     os = 'Linux';
-    else if (/Android/.test(ua))   os = 'Android';
-    else if (/iPhone|iPad/.test(ua)) os = 'iOS';
-    var deviceEl = document.getElementById('deviceInfo');
-    if (deviceEl) deviceEl.textContent = browser + ' · ' + os;
+  // Session duration: server gives us elapsed seconds at page-load time; we just keep ticking.
+  var durationEl = document.getElementById('sessionDuration');
+  if (durationEl) {
+    var startSeconds = parseInt(durationEl.getAttribute('data-start-seconds'), 10) || 0;
+    var pageLoadTime = Date.now();
 
-    // Session duration (since page load)
-    var sessionStart = Date.now();
-    var durationEl   = document.getElementById('sessionDuration');
-    if (durationEl) {
-      function updateDuration() {
-        var secs = Math.floor((Date.now() - sessionStart) / 1000);
-        var m    = Math.floor(secs / 60);
-        var s    = secs % 60;
-        durationEl.textContent = m + 'm ' + s + 's';
-      }
-      updateDuration();
-      setInterval(updateDuration, 1000);
+    function updateDuration() {
+      var elapsedSinceLoad = Math.floor((Date.now() - pageLoadTime) / 1000);
+      var totalSecs = startSeconds + elapsedSinceLoad;
+      var m = Math.floor(totalSecs / 60);
+      var s = totalSecs % 60;
+      durationEl.textContent = m + 'm ' + s + 's';
     }
-
-    // IP — can only be filled by backend, leave as placeholder
-    var ipEl = document.getElementById('ipAddress');
-    if (ipEl) {
-      // Attempt to read from template-injected meta tag
-      var ipMeta = document.querySelector('meta[name="client-ip"]');
-      ipEl.textContent = ipMeta ? ipMeta.content : 'Hidden for security';
-    }
+    updateDuration();
+    setInterval(updateDuration, 1000);
   }
+
+  // IP is now server-rendered directly in the HTML — nothing to do.
+}
 
   /* ══════════════════════════════════════════════════
      ACTIVITY — AUDIT LOG

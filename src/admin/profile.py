@@ -31,8 +31,32 @@ def _verify_totp(user, code: str) -> bool:
 @admin_bp.route("/profile", methods=["GET"])
 @login_required
 def profile():
-    return render_template("admin/profile.html", active_page="profile")
+    from datetime import datetime, timezone
 
+    login_time_iso = session.get("login_time")
+    last_login = "—"
+    session_duration_seconds = 0
+
+    if login_time_iso:
+        login_dt = datetime.fromisoformat(login_time_iso)
+        last_login = login_dt.strftime("%d %b %Y, %I:%M %p")
+        session_duration_seconds = int((datetime.now(timezone.utc) - login_dt).total_seconds())
+
+    from src.services.activity import get_client_ip
+    client_ip = session.get("client_ip", get_client_ip())
+
+    ua = request.headers.get("User-Agent", "")
+    from src.services.activity import parse_user_agent  # adjust import path to wherever you put it
+    browser, os_name = parse_user_agent(ua)
+
+    return render_template(
+        "admin/profile.html",
+        active_page="profile",
+        last_login=last_login,
+        device_info=f"{browser} · {os_name}",
+        session_duration_seconds=session_duration_seconds,
+        client_ip=client_ip,
+    )
 
 # ─────────────────────────────────────────────
 # POST /admin/profile/update
@@ -213,13 +237,13 @@ def profile_delete_account():
 @admin_bp.route("/profile/activity", methods=["GET"])
 @login_required
 def profile_activity():
-    # Replace with real DB queries when you add an AuditLog model.
-    events = [
-        {"type": "login",    "text": "Signed in",                             "time": "Just now"},
-        {"type": "order",    "text": "Updated order → Completed",             "time": "2 min ago"},
-        {"type": "menu",     "text": "Added dish to menu",                    "time": "18 min ago"},
-        {"type": "qr",       "text": "Generated QR code",                     "time": "1 hr ago"},
-        {"type": "security", "text": "Password changed",                      "time": "2 days ago"},
-        {"type": "login",    "text": "Signed in from Chrome · Windows",       "time": "3 days ago"},
-    ]
-    return jsonify(events=events)
+    from src.models.activity_log import ActivityLog
+
+    logs = (
+        ActivityLog.query
+        .filter_by(user_id=current_user.id)
+        .order_by(ActivityLog.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    return jsonify(events=[log.to_dict() for log in logs])
