@@ -9,12 +9,15 @@ from src.verify import verifyroute
 from src.home import home_bp
 from src.menu import menuroute
 from src.customer_route import customer_route
+
 from src.models.admin import User
 from src.models.menu import MenuItem
 from src.models.order import Order
 from src.models.category import Category
 from src.models.order_item import OrderItem
 from src.models.qr_code import QRCode
+from src.models.activity_log import ActivityLog
+
 from src.customer.menu_services import customer_menu
 from src.setup import setuproute
 from src.test import test_route
