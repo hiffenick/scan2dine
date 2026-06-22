@@ -27,16 +27,23 @@ def login():
 
         if not user:
             flash("Invalid username or password")
+            print("Invalid Pass or username ")
             return render_template("index.html", form=form)
 
         if not UserService.verify_password(user, form.password.data):
             flash("Invalid username or password")
+            print("Invalid Pass or username ")
             return render_template("index.html", form=form)
 
         # Store temporary user for 2FA
         session["pending_user_id"] = user.id
 
-        return redirect(url_for("login.verify_2fa"))
+        if user.totp_enable:
+            print("TOTP ENABLED")
+            return redirect(url_for("login.verify_2fa"))
+        else:
+            print("TOTP NOTENABLED")
+            return redirect(url_for("setup.setup"))
 
     return render_template("index.html", form=form)
 
@@ -87,7 +94,7 @@ def verify_2fa():
         code = form.verify_code.data
         totp = pyotp.TOTP(user.totp_secret)
 
-        if totp.verify(code):
+        if totp.verify(code,valid_window=1):
             login_user(user)
             session.pop("pending_user_id", None)
 
