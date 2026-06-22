@@ -1,0 +1,30 @@
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/totp.css') }}">
+{% endblock %}
+<!-- Step 2: TOTP -->
+    <div class="pay-modal__step-content" id="modal-step-2" style="display:none;">
+      <p class="pay-modal__desc">Enter the 6-digit code from your authenticator app.</p>
+      <div class="pay-otp-group">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 0)" onkeydown="otpKeydown(event, 0)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 1)" onkeydown="otpKeydown(event, 1)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 2)" onkeydown="otpKeydown(event, 2)">
+        <div class="pay-otp-sep">—</div>
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 3)" onkeydown="otpKeydown(event, 3)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 4)" onkeydown="otpKeydown(event, 4)">
+        <input type="text" maxlength="1" class="pay-otp-input" oninput="otpInput(this, 5)" onkeydown="otpKeydown(event, 5)">
+      </div>
+      <span class="pay-field-error" id="totp-error"></span>
+      <div class="pay-modal__footer">
+        <button class="pay-btn pay-btn--ghost" onclick="goBackToStep1()">Back</button>
+        <button class="pay-btn pay-btn--primary" onclick="verifyTotp()">
+          Verify &amp; Proceed
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/totp.js') }}"></script>
+{% endblock %}

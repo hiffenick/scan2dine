@@ -1,4 +1,5 @@
 from flask import Blueprint, redirect, render_template, url_for, session, request
+from flask_login import login_user
 from src.auth.qr import get_qr_code_image
 from src.auth.decorators import no_cache
 from src.auth.session_manager import SessionManager
@@ -13,7 +14,7 @@ setuproute = Blueprint('setup', __name__)
 @setuproute.route('/setup', methods=['GET','POST'])
 @no_cache
 def setup():
-    user_id = SessionManager.get_pre_2fa_user_id(session)
+    user_id = session.get("pending_user_id")
     if not user_id:
         return redirect(url_for('login.login'))
 
@@ -38,7 +39,9 @@ def setup():
             db.session.commit()
             # Create proper session
             # SessionManager.create_user_session(session, user)
-            session.permanent = False
+            session.pop("pending_user_id", None)
+            login_user(user)
+
             return redirect(url_for('admin.admin_dashboard'))
         else:
             error = "Invalid verification code. Please try again."

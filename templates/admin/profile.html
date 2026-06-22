@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+{% block title %}Profile · Cozy Cafe Admin{% endblock %}
+{% block page_name %}Profile{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="prof-root">
+
+  <!-- ══ Left sticky nav ══ -->
+  <nav class="prof-nav" id="profNav" aria-label="Profile sections">
+    <button class="prof-nav__mobile-toggle" id="profNavToggle" onclick="toggleProfNav()" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span id="profNavLabel">Navigate</span>
+      <svg class="prof-nav__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+
+    <ul class="prof-nav__list" id="profNavList" role="list">
+      <li>
+        <a href="#identity" class="prof-nav__item prof-nav__item--active" data-section="identity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Identity
+        </a>
+      </li>
+      <li>
+        <a href="#security" class="prof-nav__item" data-section="security">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Security
+        </a>
+      </li>
+      <li>
+        <a href="#activity" class="prof-nav__item" data-section="activity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Activity
+        </a>
+      </li>
+      <li>
+        <a href="#preferences" class="prof-nav__item" data-section="preferences">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+          Preferences
+        </a>
+      </li>
+      <li>
+        <a href="#danger" class="prof-nav__item prof-nav__item--danger" data-section="danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Danger Zone
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ══ Main content ══ -->
+  <div class="prof-content">
+
+    <!-- ── IDENTITY ─────────────────────────────── -->
+    <section class="prof-section" id="identity">
+      <div class="prof-section__head">
+        <div>
+          <p class="prof-section__eyebrow">Identity</p>
+          <h2 class="prof-section__title">Your Profile</h2>
+          <p class="prof-section__sub">How you appear across Cozy Cafe.</p>
+        </div>
+      </div>
+
+      <!-- Avatar row -->
+      <div class="prof-avatar-row">
+        <div class="prof-avatar" id="avatarDisplay" aria-hidden="true">
+          {{ current_user.name[0] if current_user.is_authenticated else 'A' }}
+        </div>
+        <div class="prof-avatar-meta">
+          <span class="prof-avatar-meta__name">{{ current_user.name if current_user.is_authenticated else 'Admin' }}</span>
+          <span class="prof-avatar-meta__role">Administrator</span>
+          <span class="prof-avatar-meta__id">ID: <code>{{ current_user.id if current_user.is_authenticated else '—' }}</code></span>
+        </div>
+      </div>
+
+      <!-- Identity form -->
+      <form class="prof-form" id="identityForm" onsubmit="saveIdentity(event)">
+        <div class="prof-form__row">
+          <div class="prof-form__field">
+            <label class="prof-label" for="displayName">Display Name</label>
+            <input class="prof-input" type="text" id="displayName" name="name" placeholder="Your name"
+              value="{{ current_user.name if current_user.is_authenticated else '' }}" autocomplete="name">
+          </div>
+          <div class="prof-form__field">
+            <label class="prof-label" for="email">Email Address</label>
+            <input class="prof-input" type="email" id="email" name="email" placeholder="you@example.com"
+              value="{{ current_user.email if current_user.is_authenticated else '' }}" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="prof-form__row">
+          <div class="prof-form__field">
+            <label class="prof-label" for="restaurantName">Restaurant Name</label>
+            <input class="prof-input" type="text" id="restaurantName" name="restaurant_name" placeholder="Cozy Cafe"
+              value="{{ current_user.restaurant_name if current_user.is_authenticated and current_user.restaurant_name else 'Cozy Cafe' }}">
+          </div>
+          <div class="prof-form__field">
+            <label class="prof-label">Role</label>
+            <div class="prof-input prof-input--readonly" aria-readonly="true">Administrator
+              <span class="tag tag--amber" style="margin-left:auto; font-size:0.58rem;">READ-ONLY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prof-form__actions">
+          <button type="submit" class="prof-btn prof-btn--primary">Save Changes</button>
+          <span class="prof-form__feedback" id="identityFeedback" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
+    <div class="prof-divider"></div>
+
+    <!-- ── SECURITY ───────────────────────────────── -->
+    <section class="prof-section" id="security">
+      <div class="prof-section__head">
+        <div>
+          <p class="prof-section__eyebrow">Security</p>
+          <h2 class="prof-section__title">Account Security</h2>
+          <p class="prof-section__sub">Manage your password and authentication settings.</p>
+        </div>
+      </div>
+
+      <!-- 2FA status card -->
+      <div class="prof-card prof-card--2fa">
+        <div class="prof-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        </div>
+        <div class="prof-card__body">
+          <div class="prof-card__label">Two-Factor Authentication</div>
+          <div class="prof-card__desc">2FA is <strong>required</strong> and cannot be disabled. Your account is protected by a TOTP authenticator app.</div>
+        </div>
+        <span class="tag tag--green" style="flex-shrink:0;">2FA ENABLED (REQUIRED)</span>
+      </div>
+
+      <!-- Reconfigure 2FA -->
+      <div class="prof-action-row">
+        <div>
+          <div class="prof-action-row__label">Reconfigure Authenticator</div>
+          <div class="prof-action-row__desc">Reset and re-link your TOTP app (Google Authenticator, Authy, etc.).</div>
+        </div>
+        <button class="prof-btn prof-btn--secondary" onclick="openModal('modal2faReconfig')">Reconfigure</button>
+      </div>
+
+      <!-- Change password -->
+      <div class="prof-action-row">
+        <div>
+          <div class="prof-action-row__label">Change Password</div>
+          <div class="prof-action-row__desc">Use a strong, unique password you don't use elsewhere.</div>
+        </div>
+        <button class="prof-btn prof-btn--secondary" onclick="openModal('modalChangePassword')">Change Password</button>
+      </div>
+    </section>
+
+    <div class="prof-divider"></div>
+
+    <!-- ── ACTIVITY ───────────────────────────────── -->
+    <section class="prof-section" id="activity">
+      <div class="prof-section__head">
+        <div>
+          <p class="prof-section__eyebrow">Activity</p>
+          <h2 class="prof-section__title">Session & Audit Log</h2>
+          <p class="prof-section__sub">A read-only record of recent account events.</p>
+        </div>
+      </div>
+
+      <!-- Session card -->
+      <div class="prof-session-grid">
+        <div class="prof-session-card">
+          <div class="prof-session-card__label">Last Login</div>
+          <div class="prof-session-card__value" id="lastLoginTime">—</div>
+        </div>
+        <div class="prof-session-card">
+          <div class="prof-session-card__label">Device</div>
+          <div class="prof-session-card__value" id="deviceInfo">—</div>
+        </div>
+        <div class="prof-session-card">
+          <div class="prof-session-card__label">Session Duration</div>
+          <div class="prof-session-card__value" id="sessionDuration">—</div>
+        </div>
+        <div class="prof-session-card">
+          <div class="prof-session-card__label">IP Address</div>
+          <div class="prof-session-card__value" id="ipAddress">—</div>
+        </div>
+      </div>
+
+      <!-- Audit log -->
+      <div class="prof-audit">
+        <div class="prof-audit__header">Recent Actions</div>
+        <ul class="prof-audit__list" id="auditLog" role="list">
+          <!-- Populated by profile.js -->
+        </ul>
+      </div>
+    </section>
+
+    <div class="prof-divider"></div>
+
+    <!-- ── PREFERENCES ────────────────────────────── -->
+    <section class="prof-section" id="preferences">
+      <div class="prof-section__head">
+        <div>
+          <p class="prof-section__eyebrow">Preferences</p>
+          <h2 class="prof-section__title">UI & Notifications</h2>
+          <p class="prof-section__sub">Personalise how the admin panel looks and notifies you.</p>
+        </div>
+      </div>
+
+      <!-- Theme toggle -->
+      <div class="prof-pref-row">
+        <div>
+          <div class="prof-pref-row__label">Theme</div>
+          <div class="prof-pref-row__desc">Switch between Obsidian (dark) and a lighter surface.</div>
+        </div>
+        <div class="prof-theme-toggle" role="group" aria-label="Theme selection">
+          <button class="prof-theme-btn prof-theme-btn--active" id="btnDark" onclick="setTheme('dark')" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            Dark
+          </button>
+          <button class="prof-theme-btn" id="btnLight" onclick="setTheme('light')" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Light
+          </button>
+        </div>
+      </div>
+
+      <!-- UI Density -->
+      <div class="prof-pref-row">
+        <div>
+          <div class="prof-pref-row__label">UI Density</div>
+          <div class="prof-pref-row__desc">Adjust spacing across the interface.</div>
+        </div>
+        <div class="prof-theme-toggle" role="group" aria-label="UI density">
+          <button class="prof-theme-btn prof-theme-btn--active" id="btnStandard" onclick="setDensity('standard')" aria-pressed="true">Standard</button>
+          <button class="prof-theme-btn" id="btnCompact" onclick="setDensity('compact')" aria-pressed="false">Compact</button>
+        </div>
+      </div>
+
+      <!-- Notification toggles -->
+      <div class="prof-pref-row">
+        <div>
+          <div class="prof-pref-row__label">New Order Alerts</div>
+          <div class="prof-pref-row__desc">Sound and visual notification when a new order arrives.</div>
+        </div>
+        <label class="prof-toggle" aria-label="New order alerts">
+          <input type="checkbox" id="notifOrders" onchange="savePref('notifOrders', this.checked)" checked>
+          <span class="prof-toggle__track"><span class="prof-toggle__thumb"></span></span>
+        </label>
+      </div>
+
+      <div class="prof-pref-row">
+        <div>
+          <div class="prof-pref-row__label">Low Stock Warnings</div>
+          <div class="prof-pref-row__desc">Alert when a menu item's availability is toggled off frequently.</div>
+        </div>
+        <label class="prof-toggle" aria-label="Low stock warnings">
+          <input type="checkbox" id="notifStock" onchange="savePref('notifStock', this.checked)">
+          <span class="prof-toggle__track"><span class="prof-toggle__thumb"></span></span>
+        </label>
+      </div>
+
+      <div class="prof-pref-row">
+        <div>
+          <div class="prof-pref-row__label">Security Alerts</div>
+          <div class="prof-pref-row__desc">Notify on new logins or suspicious account activity.</div>
+        </div>
+        <label class="prof-toggle" aria-label="Security alerts">
+          <input type="checkbox" id="notifSecurity" onchange="savePref('notifSecurity', this.checked)" checked>
+          <span class="prof-toggle__track"><span class="prof-toggle__thumb"></span></span>
+        </label>
+      </div>
+    </section>
+
+    <div class="prof-divider"></div>
+
+    <!-- ── DANGER ZONE ─────────────────────────────── -->
+    <section class="prof-section prof-section--danger" id="danger">
+      <div class="prof-section__head">
+        <div>
+          <p class="prof-section__eyebrow prof-section__eyebrow--danger">Danger Zone</p>
+          <h2 class="prof-section__title">Critical Actions</h2>
+          <p class="prof-section__sub">These actions are irreversible. Proceed with care.</p>
+        </div>
+      </div>
+
+      <div class="prof-danger-card">
+        <div class="prof-action-row prof-action-row--nodivider">
+          <div>
+            <div class="prof-action-row__label">Sign Out</div>
+            <div class="prof-action-row__desc">End your current session on this device.</div>
+          </div>
+          <a href="/logout" class="prof-btn prof-btn--secondary">Sign Out</a>
+        </div>
+
+        <div class="prof-danger-card__divider"></div>
+
+        <div class="prof-action-row prof-action-row--nodivider">
+          <div>
+            <div class="prof-action-row__label">Sign Out All Devices</div>
+            <div class="prof-action-row__desc">Revoke all active sessions across every browser and device.</div>
+          </div>
+          <button class="prof-btn prof-btn--secondary" onclick="openModal('modalSignOutAll')">Sign Out All</button>
+        </div>
+
+        <div class="prof-danger-card__divider"></div>
+
+        <div class="prof-action-row prof-action-row--nodivider">
+          <div>
+            <div class="prof-action-row__label prof-action-row__label--red">Delete Account</div>
+            <div class="prof-action-row__desc">Permanently delete your admin account and all associated data. This cannot be undone.</div>
+          </div>
+          <button class="prof-btn prof-btn--danger" onclick="openModal('modalDeleteAccount')">Delete Account</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /prof-content -->
+</div><!-- /prof-root -->
+
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+
+<!-- Change Password Modal -->
+<div class="prof-modal" id="modalChangePassword" role="dialog" aria-modal="true" aria-labelledby="modalChangePwdTitle">
+  <div class="prof-modal__box">
+    <div class="prof-modal__header">
+      <h3 class="prof-modal__title" id="modalChangePwdTitle">Change Password</h3>
+      <button class="prof-modal__close" onclick="closeModal('modalChangePassword')" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form onsubmit="submitChangePassword(event)">
+      <div class="prof-modal__body">
+        <div class="prof-form__field">
+          <label class="prof-label" for="currentPwd">Current Password</label>
+          <input class="prof-input" type="password" id="currentPwd" placeholder="Enter current password" required autocomplete="current-password">
+        </div>
+        <div class="prof-form__field">
+          <label class="prof-label" for="newPwd">New Password</label>
+          <input class="prof-input" type="password" id="newPwd" placeholder="Min. 8 characters" required autocomplete="new-password" minlength="8">
+        </div>
+        <div class="prof-form__field">
+          <label class="prof-label" for="confirmPwd">Confirm New Password</label>
+          <input class="prof-input" type="password" id="confirmPwd" placeholder="Repeat new password" required autocomplete="new-password">
+        </div>
+        <div class="prof-form__field">
+          <label class="prof-label" for="pwdTotp">2FA Code</label>
+          <input class="prof-input prof-input--mono" type="text" id="pwdTotp" placeholder="6-digit code" maxlength="6" pattern="\d{6}" inputmode="numeric" required>
+        </div>
+      </div>
+      <div class="prof-modal__footer">
+        <button type="button" class="prof-btn prof-btn--ghost" onclick="closeModal('modalChangePassword')">Cancel</button>
+        <button type="submit" class="prof-btn prof-btn--primary">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Reconfigure 2FA Modal -->
+<div class="prof-modal" id="modal2faReconfig" role="dialog" aria-modal="true" aria-labelledby="modal2faTitle">
+  <div class="prof-modal__box">
+    <div class="prof-modal__header">
+      <h3 class="prof-modal__title" id="modal2faTitle">Reconfigure Authenticator</h3>
+      <button class="prof-modal__close" onclick="closeModal('modal2faReconfig')" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prof-modal__body">
+      <div class="prof-modal__warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        You'll be logged out and required to set up 2FA again. Have your authenticator app ready before continuing.
+      </div>
+      <div class="prof-form__field">
+        <label class="prof-label" for="reconfigPwd">Confirm Password</label>
+        <input class="prof-input" type="password" id="reconfigPwd" placeholder="Your current password" required autocomplete="current-password">
+      </div>
+      <div class="prof-form__field">
+        <label class="prof-label" for="reconfigTotp">Current 2FA Code</label>
+        <input class="prof-input prof-input--mono" type="text" id="reconfigTotp" placeholder="6-digit code" maxlength="6" pattern="\d{6}" inputmode="numeric" required>
+      </div>
+    </div>
+    <div class="prof-modal__footer">
+      <button type="button" class="prof-btn prof-btn--ghost" onclick="closeModal('modal2faReconfig')">Cancel</button>
+      <button type="button" class="prof-btn prof-btn--primary" onclick="submit2faReconfig()">Reset 2FA</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sign Out All Modal -->
+<div class="prof-modal" id="modalSignOutAll" role="dialog" aria-modal="true" aria-labelledby="modalSignOutAllTitle">
+  <div class="prof-modal__box prof-modal__box--sm">
+    <div class="prof-modal__header">
+      <h3 class="prof-modal__title" id="modalSignOutAllTitle">Sign Out All Devices</h3>
+      <button class="prof-modal__close" onclick="closeModal('modalSignOutAll')" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prof-modal__body">
+      <p class="prof-modal__text">This will immediately revoke all active sessions. You'll be signed out on every device, including this one.</p>
+      <div class="prof-form__field" style="margin-top:1rem;">
+        <label class="prof-label" for="signOutAllTotp">Confirm with 2FA Code</label>
+        <input class="prof-input prof-input--mono" type="text" id="signOutAllTotp" placeholder="6-digit code" maxlength="6" pattern="\d{6}" inputmode="numeric">
+      </div>
+    </div>
+    <div class="prof-modal__footer">
+      <button type="button" class="prof-btn prof-btn--ghost" onclick="closeModal('modalSignOutAll')">Cancel</button>
+      <button type="button" class="prof-btn prof-btn--danger" onclick="submitSignOutAll()">Sign Out All</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="prof-modal" id="modalDeleteAccount" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle">
+  <div class="prof-modal__box">
+    <div class="prof-modal__header">
+      <h3 class="prof-modal__title prof-modal__title--red" id="modalDeleteTitle">Delete Account</h3>
+      <button class="prof-modal__close" onclick="closeModal('modalDeleteAccount')" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="prof-modal__body">
+      <div class="prof-modal__warn prof-modal__warn--red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Your account will be deactivated immediately. Permanent deletion happens after 30 days. This cannot be undone.
+      </div>
+      <div class="prof-form__field">
+        <label class="prof-label" for="deletePwd">Password</label>
+        <input class="prof-input" type="password" id="deletePwd" placeholder="Your current password" required autocomplete="current-password">
+      </div>
+      <div class="prof-form__field">
+        <label class="prof-label" for="deleteTotp">2FA Code</label>
+        <input class="prof-input prof-input--mono" type="text" id="deleteTotp" placeholder="6-digit code" maxlength="6" pattern="\d{6}" inputmode="numeric" required>
+      </div>
+      <div class="prof-form__field">
+        <label class="prof-label" for="deleteConfirmText">
+          Type <code class="prof-code">DELETE MY ACCOUNT</code> to confirm
+        </label>
+        <input class="prof-input" type="text" id="deleteConfirmText" placeholder="DELETE MY ACCOUNT" autocomplete="off">
+      </div>
+    </div>
+    <div class="prof-modal__footer">
+      <button type="button" class="prof-btn prof-btn--ghost" onclick="closeModal('modalDeleteAccount')">Cancel</button>
+      <button type="button" class="prof-btn prof-btn--danger" id="btnDeleteConfirm" onclick="submitDeleteAccount()" disabled>Delete My Account</button>
+    </div>
+  </div>
+</div>
+{# {% include 'components/totp.html' %} #}
+<!-- Modal backdrop -->
+<div class="prof-modal-backdrop" id="modalBackdrop" onclick="closeAllModals()"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
