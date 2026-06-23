@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from src.extensions import db
 from src.services.menu_service import get_active_menu_items
 from src.models.menu import MenuItem
+from src.services.qr_token import get_table_lock
+
 
 customer_route = Blueprint(
     'customer',
@@ -126,7 +128,8 @@ def order_confirmation():
 
 @customer_route.route('/api/table-status/<int:table_number>')
 def table_status(table_number):
-    from src.services.qr_token import _redis
-    locked = _redis().get(f"table_lock:{table_number}")
+    from src.services.qr_token import get_table_lock
+
+    locked = get_table_lock(table_number)
     return jsonify({"occupied": locked is not None})
 

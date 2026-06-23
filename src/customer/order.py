@@ -21,7 +21,7 @@ from src.services.cart_service import (
     CartError
 )
 from src.models.setting import Setting
-from src.services.redis_session import get_table_number, get_customer_session
+from src.services.redis_session import get_customer_session
 
 customer_order_bp = Blueprint(
     "customer_order",
@@ -56,7 +56,7 @@ def place_customer_order():
     cart_session_id = session.get('cart_id') or session_id
     
     # Get table number from Redis (PRIMARY) or Flask session (FALLBACK)
-    table_no = get_table_number(session_id)  # ← Fetch from Redis first
+    table_no = session.get("table_no") # ← Fetch from Redis first
     
     if not table_no:
         # Fallback to Flask session
@@ -80,29 +80,22 @@ def place_customer_order():
         customer_name = customer_data.get("customer_name", "Walk-in")
     
     # Get Redis client
-    redis_client = current_app.config.get("REDIS_CLIENT")
-    if not redis_client:
-        current_app.logger.error("Redis client not configured")
-        return jsonify({
-            "success": False,
-            "error": "Service temporarily unavailable"
-        }), 503
+    # redis_client = current_app.config.get("REDIS_CLIENT")
+    # if not redis_client:
+    #     current_app.logger.error("Redis client not configured")
+    #     return jsonify({
+    #         "success": False,
+    #         "error": "Service temporarily unavailable"
+    #     }), 503
     
-    # Acquire Redis lock to prevent double submission
-    # Use cart_session_id so locks are tied to the customer's cart (UI uses cart_id)
-    lock_key = f"order_lock:{cart_session_id}"
-    lock = redis_client.lock(lock_key, timeout=LOCK_TIMEOUT)
+    # # Acquire Redis lock to prevent double submission
+    # # Use cart_session_id so locks are tied to the customer's cart (UI uses cart_id)
+    # lock_key = f"order_lock:{cart_session_id}"
+    # lock = redis_client.lock(lock_key, timeout=LOCK_TIMEOUT)
     
     try:
         # Try to acquire lock with timeout
-        acquired = lock.acquire(blocking=True, blocking_timeout=LOCK_BLOCKING_TIMEOUT)
-        
-        if not acquired:
-            return jsonify({
-                "success": False,
-                "error": "Order is being processed. Please wait."
-            }), 409
-
+        pass
         # Get cart from Redis (use cart_session_id)
         try:
             cart_ctx = get_cart(cart_session_id)
@@ -281,34 +274,27 @@ def place_customer_order():
             "success": False,
             "error": "An unexpected error occurred. Please try again."
         }), 500
-        
-    finally:
-        # Always release the Redis lock
-        try:
-            if lock.owned():
-                lock.release()
-        except Exception as e:
-            current_app.logger.warning(f"Error releasing lock: {e}")
+    
 
 @customer_order_bp.route("/debug/session", methods=["GET"])
 @csrf.exempt
 def debug_session():
     """Debug endpoint to check session state"""
-    from src.services.redis_session import get_customer_session, get_table_number
+    from src.services.redis_session import get_customer_session
     from src.services.cart_service import get_cart
     
     session_id = session.get("session_id")
     flask_table = session.get("table_no")
     
     redis_session = get_customer_session(session_id) if session_id else None
-    redis_table = get_table_number(session_id) if session_id else None
+    redis_table = session.get("table_no")
     cart = get_cart(session_id) if session_id else None
     
     return jsonify({
         "session_id": session_id,
         "flask_session_table_no": flask_table,
-        "redis_session_data": redis_session,
-        "redis_table_no": redis_table,
+        "session_data": redis_session,
+        "table_no": redis_table,
         "cart_data": cart,
         "all_session_data": dict(session)
     })
