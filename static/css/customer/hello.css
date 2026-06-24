@@ -1,0 +1,345 @@
+/* ============================================================
+   Kans Resto — Welcome Screen
+   Design tokens: warm linen + deep pine + brass accent
+   ============================================================ */
+
+:root {
+    /* Color */
+    --linen: #F7F4EC;
+    --linen-deep: #EFE9D8;
+    --card: #FFFDF8;
+    --pine: #33402F;
+    --pine-soft: #4D5C46;
+    --sage: #8FA68E;
+    --sage-deep: #6E8870;
+    --brass: #C9A05C;
+    --brass-soft: #E3CB99;
+    --moss: #707D6C;
+    --line: #E2DCC8;
+
+    /* Type */
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* Shape & motion */
+    --radius-lg: 28px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --shadow-card: 0 30px 70px -20px rgba(51, 64, 47, 0.35), 0 8px 20px -8px rgba(51, 64, 47, 0.15);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    color: var(--pine);
+    background: var(--linen);
+}
+
+.scene {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 8%, rgba(143, 166, 142, 0.28), transparent 45%),
+        radial-gradient(circle at 85% 92%, rgba(201, 160, 92, 0.16), transparent 50%),
+        var(--linen);
+}
+
+/* Subtle linen-weave texture sitting behind the card, like a tablecloth */
+.table-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        repeating-linear-gradient(0deg, rgba(51,64,47,0.025) 0px, rgba(51,64,47,0.025) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(51,64,47,0.025) 0px, rgba(51,64,47,0.025) 1px, transparent 1px, transparent 3px);
+    opacity: 0.5;
+}
+
+/* ============================== Card ============================== */
+
+.card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 380px;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 38px 30px 32px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(51, 64, 47, 0.06);
+}
+
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 26px;
+}
+
+.rule {
+    width: 22px;
+    height: 2px;
+    background: var(--brass);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--moss);
+    font-weight: 500;
+}
+
+.greet {
+    margin-bottom: 30px;
+}
+
+.greet-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 2.4rem;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+}
+
+.greet-title .line {
+    display: block;
+}
+
+.greet-title .accent {
+    color: var(--sage-deep);
+    font-style: italic;
+    font-weight: 400;
+}
+
+.greet-sub {
+    margin-top: 12px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--moss);
+    max-width: 30ch;
+}
+
+/* ============================== Form ============================== */
+
+.field {
+    margin-bottom: 22px;
+}
+
+.field label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sage-deep);
+    font-weight: 600;
+    margin-bottom: 9px;
+}
+
+.field label span {
+    color: var(--pine);
+    font-weight: 700;
+}
+
+input[type="text"],
+input:not([type="hidden"]) {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--line);
+    background: var(--linen-deep);
+    color: var(--pine);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+input::placeholder {
+    color: var(--moss);
+    opacity: 0.7;
+}
+
+input:focus-visible {
+    outline: none;
+    border-color: var(--sage-deep);
+    background: var(--card);
+    box-shadow: 0 0 0 4px rgba(143, 166, 142, 0.22);
+}
+
+/* ---------- Seat picker (signature element) ---------- */
+
+.seats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--linen-deep);
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 8px;
+}
+
+.seat-btn {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    border: none;
+    background: var(--card);
+    color: var(--pine-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 0 rgba(51,64,47,0.08), 0 4px 10px -4px rgba(51,64,47,0.15);
+    transition: transform 0.15s var(--ease), background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.seat-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.seat-btn:hover {
+    background: var(--sage);
+    color: #fff;
+}
+
+.seat-btn:active {
+    transform: scale(0.92);
+}
+
+.seat-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: var(--card);
+    color: var(--pine-soft);
+}
+
+.seat-row {
+    display: flex;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.seat-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid var(--sage);
+    background: transparent;
+    transition: background 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease);
+    flex-shrink: 0;
+}
+
+.seat-dot.filled {
+    background: var(--sage-deep);
+    border-color: var(--sage-deep);
+    transform: scale(1.08);
+}
+
+/* ---------- Submit ---------- */
+
+.done-btn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 15px 18px;
+    border-radius: var(--radius-md);
+    background: var(--pine);
+    color: var(--linen);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 14px 30px -10px rgba(51, 64, 47, 0.45);
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease);
+}
+
+.done-btn svg {
+    width: 17px;
+    height: 17px;
+    transition: transform 0.25s var(--ease);
+}
+
+.done-btn:hover {
+    background: var(--sage-deep);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 34px -10px rgba(111, 136, 112, 0.5);
+}
+
+.done-btn:hover svg {
+    transform: translateX(3px);
+}
+
+.done-btn:active {
+    transform: translateY(0);
+}
+
+.done-btn:focus-visible {
+    outline: 3px solid var(--brass-soft);
+    outline-offset: 2px;
+}
+
+/* ============================== Entrance motion ============================== */
+
+.card-top, .greet, .field, .done-btn {
+    opacity: 0;
+}
+
+/* ============================== Responsive ============================== */
+
+@media (max-width: 420px) {
+    .card {
+        padding: 32px 22px 26px;
+        border-radius: 22px;
+        max-width: 100%;
+    }
+
+    .greet-title {
+        font-size: 2.1rem;
+    }
+}
+
+@media (max-height: 700px) {
+    .scene {
+        align-items: flex-start;
+        padding-top: 40px;
+    }
+}
+
+@media (min-width: 440px) {
+    .card {
+        max-width: 400px;
+    }
+}

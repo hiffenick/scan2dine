@@ -1,788 +1,150 @@
 <!DOCTYPE html>
-<html   
-lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kans Resto | Current Order</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-        <style>
-        :root {
-            --bg-main: #eef3ec;
-            --bg-accent: #dfe8e2;
-            --card-bg: #fffdf9;
-            --accent: #8fae9b;
-            --accent-strong: #6f927f;
-            --text-main: #2f3a34;
-            --text-muted: #6b776f;
-            --shadow-premium: 0 20px 50px rgba(47, 58, 52, 0.15);
-            --shadow-card: 0 4px 12px rgba(47, 58, 52, 0.08);
-        }
+    <title>Kans Resto | Your Order</title>
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: 'Inter', sans-serif; 
-        }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-        body {
-            background: radial-gradient(circle at top, var(--bg-accent), var(--bg-main));
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            overflow: hidden;
-        }
-
-        /* Main Container - Responsive */
-        .phone-container {
-            width: 100%;
-            max-width: 400px;
-            height: calc(100vh - 20px);
-            max-height: 750px;
-            background: var(--card-bg);
-            border-radius: 30px;
-            box-shadow: var(--shadow-premium);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            border: 6px solid white;
-        }
-
-        /* Tablet and Desktop styles */
-        @media (min-width: 768px) {
-            body {
-                padding: 20px;
-            }
-            
-            .phone-container {
-                max-width: 420px;
-                height: calc(100vh - 40px);
-                max-height: 800px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .phone-container {
-                max-width: 440px;
-                border-radius: 35px;
-                height: 90vh;
-                max-height: 850px;
-            }
-        }
-
-        /* Scrollable Content Area */
-        .scroll-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 18px;
-            padding-bottom: 85px;
-        }
-        
-        .scroll-content::-webkit-scrollbar { 
-            width: 6px;
-        }
-        
-        .scroll-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        .scroll-content::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
-        }
-
-        /* Header */
-        .header { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            margin-bottom: 16px;
-            animation: fadeInDown 0.6s ease;
-        }
-        
-        .back-btn { 
-            text-decoration: none; 
-            color: var(--text-main); 
-            font-size: 1.3rem;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .back-btn:hover {
-            background: var(--bg-accent);
-            transform: translateX(-3px);
-        }
-        
-        h1 { 
-            font-family: 'Playfair Display', serif; 
-            font-size: 1.4rem; 
-            color: var(--text-main);
-        }
-
-        @media (min-width: 768px) {
-            h1 { font-size: 1.6rem; }
-            .header { margin-bottom: 20px; }
-        }
-
-        /* Order Items */
-        .order-item {
-            background: white;
-            border-radius: 16px;
-            padding: 10px;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #f0f3f1;
-            box-shadow: var(--shadow-card);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.5s ease backwards;
-        }
-        
-        .order-item:nth-child(2) { animation-delay: 0.1s; }
-        .order-item:nth-child(3) { animation-delay: 0.2s; }
-        
-        .order-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(47, 58, 52, 0.12);
-        }
-        
-        .order-item img { 
-            width: 70px; 
-            height: 70px; 
-            border-radius: 12px; 
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-        
-        @media (min-width: 768px) {
-            .order-item {
-                padding: 12px;
-                margin-bottom: 12px;
-            }
-            .order-item img {
-                width: 80px;
-                height: 80px;
-            }
-        }
-        
-        .item-details { 
-            flex: 1; 
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        
-        .item-name { 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            color: var(--text-main);
-            line-height: 1.3;
-        }
-        
-        .item-price { 
-            color: var(--accent-strong); 
-            font-weight: 700; 
-            font-size: 0.85rem; 
-            margin: 4px 0;
-        }
-        
-        @media (min-width: 768px) {
-            .item-name { font-size: 0.9rem; }
-            .item-price { font-size: 0.9rem; }
-        }
-        
-        /* Quantity Control */
-        .qty-control { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            margin-top: 4px;
-        }
-        
-        .qty-btn { 
-            width: 26px; 
-            height: 26px; 
-            border-radius: 7px; 
-            border: none; 
-            background: var(--text-main); 
-            color: white; 
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        
-        .qty-btn:hover {
-            background: var(--accent-strong);
-            transform: scale(1.1);
-        }
-        
-        .qty-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .qty-val { 
-            font-size: 0.85rem; 
-            font-weight: 600;
-            min-width: 18px;
-            text-align: center;
-        }
-        
-        .delete-btn { 
-            background: none; 
-            border: none; 
-            color: #d0d0d0; 
-            cursor: pointer; 
-            font-size: 1.2rem;
-            padding: 5px;
-            transition: all 0.2s ease;
-            align-self: flex-start;
-        }
-        
-        .delete-btn:hover {
-            color: #e74c3c;
-            transform: scale(1.1);
-        }
-
-        /* Summary Section */
-        .summary-section { 
-            margin-top: 18px; 
-            border-top: 2px dashed #d9e2dc; 
-            padding-top: 14px;
-            animation: fadeInUp 0.6s ease 0.3s backwards;
-        }
-        
-        .summary-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 7px; 
-            font-size: 0.8rem; 
-            color: var(--text-muted);
-        }
-        
-        .summary-row.total { 
-            color: var(--text-main); 
-            font-weight: 700; 
-            font-size: 1rem; 
-            margin-top: 8px; 
-            padding-top: 8px; 
-            border-top: 2px solid #e8ede9;
-        }
-        
-        .total-price { 
-            color: var(--accent-strong);
-            font-size: 1.05rem;
-        }
-
-        @media (min-width: 768px) {
-            .summary-section { margin-top: 24px; padding-top: 18px; }
-            .summary-row { font-size: 0.85rem; margin-bottom: 8px; }
-            .summary-row.total { font-size: 1.1rem; margin-top: 10px; padding-top: 10px; }
-            .total-price { font-size: 1.15rem; }
-        }
-
-        /* Bottom Button */
-        .payment-section {
-            position: absolute;
-            bottom: 70px;
-            left: 18px;
-            right: 18px;
-            width: calc(100% - 36px);
-        }
-
-        .payment-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .payment-selector {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .payment-option {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #d9e2dc;
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-main);
-            transition: all 0.3s ease;
-        }
-
-        .payment-option:hover {
-            border-color: var(--accent);
-            background: #f0f5f3;
-        }
-
-        .payment-option.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent-strong);
-        }
-
-        /* Session URL Display */
-        .session-url-bar {
-            background: var(--input-bg);
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-align: center;
-            word-break: break-all;
-            border: 1px solid #e8ede9;
-        }
-
-        .order-now-btn {
-            position: absolute;
-            bottom: 14px;
-            left: 18px;
-            right: 18px;
-            background: var(--text-main);
-            color: white;
-            padding: 14px;
-            border-radius: 16px;
-            text-align: center;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            width: calc(100% - 36px);
-        }
-        
-        .order-now-btn:hover {
-            background: var(--accent-strong);
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-        }
-        
-        .order-now-btn:active {
-            transform: translateY(0);
-        }
-
-        @media (min-width: 768px) {
-            .order-now-btn {
-                font-size: 1rem;
-                padding: 16px;
-                bottom: 18px;
-                left: 20px;
-                right: 20px;
-                width: calc(100% - 40px);
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Empty Cart Message */
-        .empty-cart {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        
-        .empty-cart-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            opacity: 0.3;
-        }
-        
-        .empty-cart p {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        /* Success Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .modal-overlay.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 25px;
-            text-align: center;
-            max-width: 320px;
-            width: 90%;
-            box-shadow: var(--shadow-premium);
-        }
-        
-        .modal-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
-        }
-        
-        .modal-content h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--text-main);
-            margin-bottom: 10px;
-        }
-        
-        .modal-content p {
-            color: var(--text-muted);
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-        
-        .modal-btn {
-            background: var(--text-main);
-            color: white;
-            padding: 14px 30px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .modal-btn:hover {
-            background: var(--accent-strong);
-            transform: scale(1.05);
-        }
-
-        .summary-section {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer/cart.css') }}">
 </head>
-<body>
+<body data-theme="dark">
 
-<div class="phone-container">
-    <div class="scroll-content" id="scrollContent">
-        <div class="header">
-            <a href="{{ url_for('customer_menu.explore_menu') }}" class="back-btn" id="backBtn">←</a>
-            <h1>Current Order</h1>
+<!-- ============ TOP BAR ============ -->
+<header class="cart-bar">
+    <a href="{{ url_for('customer_menu.explore_menu') }}" class="back-btn" aria-label="Back to menu">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="back-btn-label">Menu</span>
+    </a>
+
+    <div class="cart-bar-mid">
+        <span class="cart-bar-title">Your order</span>
+        <span class="cart-bar-table">Table {{ order_ctx.customer.table_no if order_ctx else '—' }}</span>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5V5M12 19V21.5M4.5 12H2M22 12H19.5M5.1 5.1L6.9 6.9M18.9 5.1L17.1 6.9M5.1 18.9L6.9 17.1M18.9 18.9L17.1 17.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20.5 14.2A8.4 8.4 0 0 1 9.8 3.5a8.8 8.8 0 1 0 10.7 10.7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+</header>
+
+<div class="cart-layout">
+
+    <!-- ============ MAIN: ORDER LIST ============ -->
+    <main class="cart-main">
+
+        <div class="cart-head">
+            <span class="cart-eyebrow">Before you send it off</span>
+            <h1 id="cartHeading">Review your order</h1>
+            <p class="cart-sub" id="cartSub">Check the dishes and quantities below, then send it to the kitchen.</p>
         </div>
 
-        <div id="orderItems">
-            <!-- Items will be dynamically injected here -->
+        <!-- Populated by JS: list of cart line items -->
+        <div class="ticket" id="ticketList"></div>
+
+        <!-- Empty state -->
+        <div class="cart-empty" id="cartEmpty" hidden>
+            <div class="cart-empty-emoji">🧾</div>
+            <h3>Your order is empty</h3>
+            <p>Head back to the menu and tap "Add" on anything that looks good.</p>
+            <a href="{{ url_for('customer_menu.explore_menu') }}" class="cart-empty-cta">Browse the menu</a>
         </div>
 
-        <div class="summary-section" id="summarySection">
+        <!-- Add a note -->
+        <div class="note-block" id="noteBlock" hidden>
+            <label for="orderNote" class="note-label">Add a note for the kitchen <span>(optional)</span></label>
+            <textarea id="orderNote" class="note-input" rows="2" placeholder="E.g. less spicy, no onions, allergies…" maxlength="200"></textarea>
+        </div>
+
+    </main>
+
+    <!-- ============ RIGHT: STICKY SUMMARY (desktop) ============ -->
+    <aside class="summary-rail" id="summaryRail" hidden>
+        <div class="summary-card">
+            <h2 class="summary-title">Order summary</h2>
+
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span id="subtotal">Rp 0.00</span>
+                <span id="sumSubtotal">₹0.00</span>
+            </div>
+            <div class="summary-row summary-row-discount" id="sumDiscountRow" hidden>
+                <span>Discount</span>
+                <span id="sumDiscount">−₹0.00</span>
             </div>
             <div class="summary-row">
-                <span>Discount sales</span>
-                <span style="color: #e67e22;" id="discount">-Rp 0.00</span>
+                <span>Tax (10%)</span>
+                <span id="sumTax">₹0.00</span>
             </div>
-            <div class="summary-row">
-                <span>Total tax</span>
-                <span id="tax">Rp 0.00</span>
-            </div>
-            <div class="summary-row total">
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-row summary-row-total">
                 <span>Total</span>
-                <span class="total-price" id="total">Rp 0.00</span>
+                <span id="sumTotal">₹0.00</span>
             </div>
+
+            <button class="place-order-btn" id="placeOrderBtn">
+                <span>Send to kitchen</span>
+                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <p class="summary-fineprint">Your order goes straight to the kitchen once placed. You can track its status from "My orders."</p>
         </div>
+    </aside>
 
-        <!-- <div class="session-url-bar" id="sessionUrlBar">
-            Session: <span id="sessionUrl">{{ session_id or 'Loading...' }}</span>
-        </div> -->
-    </div>
-
-    <div class="payment-section">
-        <label class="payment-label">💳 Payment Method</label>
-        <div class="payment-selector">
-            <div class="payment-option active" data-method="cash" onclick="selectPaymentMethod('cash', this)">
-                💵 Cash
-            </div>
-            <div class="payment-option" data-method="online" onclick="selectPaymentMethod('online', this)">
-                🏦 Online
-            </div>
-        </div>
-    </div>
-
-    <button class="order-now-btn" id="placeOrder">Order Now</button>
 </div>
 
-<!-- Success Modal -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-content" id="modalContent">
-        <div class="modal-icon">✅</div>
-        <h2>Order Placed!</h2>
-        <p>Your order has been successfully placed. We'll prepare it with care.</p>
-        <button class="modal-btn" id="modalClose">Continue</button>
+<!-- ============ MOBILE: STICKY BOTTOM SUMMARY BAR ============ -->
+<div class="mobile-summary" id="mobileSummary" hidden>
+    <button class="mobile-summary-expand" id="mobileSummaryExpand" aria-expanded="false">
+        <div class="mobile-summary-totals">
+            <span class="mobile-summary-count" id="mobileSummaryCount">0 items</span>
+            <span class="mobile-summary-total" id="mobileSummaryTotal">₹0.00</span>
+        </div>
+        <svg class="mobile-summary-chevron" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <div class="mobile-summary-detail" id="mobileSummaryDetail">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="sumSubtotalMobile">₹0.00</span>
+        </div>
+        <div class="summary-row summary-row-discount" id="sumDiscountRowMobile" hidden>
+            <span>Discount</span>
+            <span id="sumDiscountMobile">−₹0.00</span>
+        </div>
+        <div class="summary-row">
+            <span>Tax (10%)</span>
+            <span id="sumTaxMobile">₹0.00</span>
+        </div>
     </div>
+
+    <button class="place-order-btn place-order-btn-mobile" id="placeOrderBtnMobile">
+        <span>Send to kitchen</span>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<!-- ============ CONFIRMATION OVERLAY ============ -->
+<div class="confirm-overlay" id="confirmOverlay" hidden>
+    <div class="confirm-card">
+        <div class="confirm-check">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>Order sent!</h2>
+        <p>The kitchen has your order for Table <span id="confirmTable">1</span>. You'll be able to track it from "My orders."</p>
+        <a href="/customer/api/my-orders" class="confirm-cta">View my orders</a>
+        <button class="confirm-secondary" id="confirmKeepBrowsing">Keep browsing the menu</button>
+    </div>
+</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-
-    // ===============================
-    // Format currency
-    // ===============================
-    function formatCurrency(amount) {
-        const num = parseFloat(amount) || 0;
-        return 'Rp ' + num.toFixed(2);
-    }
-
-    // ===============================
-    // Render cart
-    // ===============================
-    function updateCartUI(items, totals) {
-        const container = document.getElementById('orderItems');
-        const summarySection = document.getElementById('summarySection');
-        if (!container || !summarySection) return;
-
-        if (!items || items.length === 0) {
-            renderEmptyState();
-            return;
-        }
-
-        summarySection.style.display = "block";
-
-        container.innerHTML = items.map(item => `
-            <div class="order-item" data-id="${item.id}">
-                <img src="${item.image || 'https://via.placeholder.com/70'}" alt="${item.name}">
-                <div class="item-details">
-                    <p class="item-name">${item.name}</p>
-                    <p class="item-price">Rp ${Number(item.price).toLocaleString('id-ID')}</p>
-                    <div class="qty-control">
-                        <button class="qty-btn qty-decrease">−</button>
-                        <span class="qty-val">${item.quantity}</span>
-                        <button class="qty-btn qty-increase">+</button>
-                    </div>
-                </div>
-                <button class="delete-btn">🗑️</button>
-            </div>
-        `).join('');
-
-        document.getElementById('subtotal').textContent = formatCurrency(totals?.subtotal);
-        document.getElementById('discount').textContent = '-' + formatCurrency(totals?.discount);
-        document.getElementById('tax').textContent = formatCurrency(totals?.tax);
-        document.getElementById('total').textContent = formatCurrency(totals?.grand_total);
-    }
-
-    function renderEmptyState() {
-        const container = document.getElementById('orderItems');
-        const summarySection = document.getElementById('summarySection');
-        if (!container || !summarySection) return;
-
-        container.innerHTML = `
-            <div class="empty-cart">
-                <div class="empty-cart-icon">🛒</div>
-                <p>Your cart is empty</p>
-                <p style="font-size: 0.85rem;">Add some delicious items!</p>
-            </div>
-        `;
-        summarySection.style.display = "none";
-    }
-
-    // ===============================
-    // Fetch cart
-    // ===============================
-    async function fetchCart() {
-        try {
-            const res = await fetch("/api/cart/current");
-            const data = await res.json();
-            if (data.success) {
-                updateCartUI(data.items, data.totals);
-            } else {
-                renderEmptyState();
-            }
-        } catch (err) {
-            console.error("Cart fetch error:", err);
-            renderEmptyState();
-        }
-    }
-
-    fetchCart();
-
-    // ===============================
-    // Update cart
-    // ===============================
-    async function updateCartItem(itemId, action) {
-        try {
-            const res = await fetch("/api/cart", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ item_id: itemId, action })
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                updateCartUI(data.cart, data.totals);
-            } else {
-                fetchCart();
-            }
-        } catch (err) {
-            console.error("Cart update error:", err);
-        }
-    }
-
-    document.addEventListener('click', function(e) {
-        const itemEl = e.target.closest('.order-item');
-        if (!itemEl) return;
-
-        const id = parseInt(itemEl.dataset.id);
-
-        if (e.target.classList.contains('qty-increase')) {
-            updateCartItem(id, "ADD");
-        }
-
-        if (e.target.classList.contains('qty-decrease')) {
-            updateCartItem(id, "REMOVE");
-        }
-
-        if (e.target.classList.contains('delete-btn')) {
-            updateCartItem(id, "DELETE").then(() => {
-                if (typeof gsap !== "undefined") {
-                    gsap.to(itemEl, { x: 300, opacity: 0, duration: 0.3 });
-                }
-            });
-        }
-    });
-
-    // ===============================
-    // Payment method
-    // ===============================
-    let selectedPaymentMethod = 'cash';
-
-    window.selectPaymentMethod = function(method, element) {
-        selectedPaymentMethod = method;
-        document.querySelectorAll('.payment-option').forEach(opt => {
-            opt.classList.remove('active');
-        });
-        if (element) element.classList.add('active');
-    };
-
-    const defaultOption = document.querySelector('[data-method="cash"]');
-    if (defaultOption) defaultOption.classList.add('active');
-
-    // ===============================
-    // Place Order
-    // ===============================
-    const placeOrderBtn = document.getElementById('placeOrder');
-
-    if (placeOrderBtn) {
-        placeOrderBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-
-            if (placeOrderBtn.disabled) return;
-
-            placeOrderBtn.disabled = true;
-            placeOrderBtn.style.opacity = 0.6;
-
-            try {
-                const res = await fetch("/customer/api/orders/place", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        "X-Requested-With": "XMLHttpRequest"
-                    },
-                    body: JSON.stringify({ payment_method: selectedPaymentMethod })
-                });
-
-                if (res.status === 409) {
-                    alert("Order already exists or cart invalid.");
-                    placeOrderBtn.disabled = false;
-                    placeOrderBtn.style.opacity = 1;
-                    return;
-                }
-
-                const data = await res.json();
-                console.log("Order response:", data);
-
-                if (res.ok && data.order_id) {
-                    if (data.upi_qr_base64) {
-                        const overlay = document.getElementById('modalOverlay');
-                        const content = document.getElementById('modalContent');
-                        content.innerHTML = `
-                            <div class="modal-icon">💳</div>
-                            <h2>Scan to Pay</h2>
-                            <p>Pay <strong>₹${data.total.toFixed(2)}</strong> via UPI</p>
-                            <img src="${data.upi_qr_base64}" alt="UPI QR" style="max-width:200px; margin:12px auto; display:block; border-radius:12px;"/>
-                            <button class="modal-btn" onclick="window.location.href='/customer/api/confirmation?order_id=${data.order_id}'">Done — View Bill</button>
-                        `;
-                        overlay.classList.add('active');
-                        gsap.from(content, { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out' });
-                    } else {
-                        window.location.href = "/customer/api/confirmation?order_id=" + data.order_id;
-                    }
-                } else {
-                    alert(data.error || "Failed to place order.");
-                    placeOrderBtn.disabled = false;
-                    placeOrderBtn.style.opacity = 1;
-                }
-
-
-            } catch (err) {
-                console.error("Place order error:", err);
-                alert("Something went wrong.");
-                placeOrderBtn.disabled = false;
-                placeOrderBtn.style.opacity = 1;
-            }
-        });
-    }
-
-});
+    const TABLE_NUMBER = {{ order_ctx.customer.table_no if order_ctx else 0 }};
 </script>
-
-
+<script src="{{ url_for('static', filename='js/customer/cart.js') }}"></script>
 
 </body>
 </html>
