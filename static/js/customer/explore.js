@@ -27,6 +27,14 @@ function saveCart(cart) {
   sessionStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
+function syncCartFromServer(serverCart) {
+  cart = {};
+  (serverCart || []).forEach(entry => {
+    cart[entry.id] = { name: entry.name, qty: entry.quantity, price: entry.price };
+  });
+  saveCart(cart);
+}
+
 // cart = { [itemId]: { name, qty, price? } }
 let cart = loadCart();
 
@@ -89,38 +97,72 @@ function syncItemUI(itemId) {
 /**
  * addItemToCart — triggered by "Add" button on dish rows.
  */
-function addItemToCart(itemId, name) {
-  if (!cart[itemId]) {
-    cart[itemId] = { name, qty: 0 };
+async function addItemToCart(itemId, name) {
+  try {
+    const res = await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: Number(itemId), action: 'ADD' })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      console.error(data.error || 'Failed to add item');
+      return;
+    }
+    syncCartFromServer(data.cart);
+    syncItemUI(itemId);
+    updateCartUI();
+    flashAdd(itemId);
+  } catch (err) {
+    console.error(err);
   }
-  cart[itemId].qty += 1;
-  saveCart(cart);
-  syncItemUI(itemId);
-  updateCartUI();
-  flashAdd(itemId);
 }
 
 /**
  * increaseQuantity — triggered by "+" counter button.
  */
-function increaseQuantity(itemId, name) {
-  if (!cart[itemId]) cart[itemId] = { name, qty: 0 };
-  cart[itemId].qty += 1;
-  saveCart(cart);
-  syncItemUI(itemId);
-  updateCartUI();
+async function increaseQuantity(itemId, name) {
+  try {
+    const res = await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: Number(itemId), action: 'ADD' })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      console.error(data.error || 'Failed to update item');
+      return;
+    }
+    syncCartFromServer(data.cart);
+    syncItemUI(itemId);
+    updateCartUI();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 /**
  * decreaseQuantity — triggered by "−" counter button.
  */
-function decreaseQuantity(itemId) {
+async function decreaseQuantity(itemId) {
   if (!cart[itemId]) return;
-  cart[itemId].qty -= 1;
-  if (cart[itemId].qty <= 0) delete cart[itemId];
-  saveCart(cart);
-  syncItemUI(itemId);
-  updateCartUI();
+  try {
+    const res = await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: Number(itemId), action: 'REMOVE' })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      console.error(data.error || 'Failed to update item');
+      return;
+    }
+    syncCartFromServer(data.cart);
+    syncItemUI(itemId);
+    updateCartUI();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 /**
@@ -424,7 +466,16 @@ function positionHoverPreview(row) {
    INIT
 ───────────────────────────────────────────── */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/api/cart/current');
+    const data = await res.json();
+    if (res.ok && data.success) {
+      syncCartFromServer(data.items);
+    }
+  } catch (err) {
+    console.error('Failed to load cart from server:', err);
+  }
   restoreCartUI();
   runEntranceAnimations();
   attachHoverPreviewListeners();
