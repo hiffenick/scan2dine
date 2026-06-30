@@ -96,3 +96,5 @@ CUSTOMER_SYSTEM.txt
 IMPLEMENTATION_NOTES.md
 SESSION_SECURITY_FIX.txt
 help.txt
+
+src/services/_customer_sessions.json

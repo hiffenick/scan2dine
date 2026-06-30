@@ -59,6 +59,21 @@
             <textarea id="orderNote" class="note-input" rows="2" placeholder="E.g. less spicy, no onions, allergies…" maxlength="200"></textarea>
         </div>
 
+        <!-- Payment Method Section -->
+        <div class="payment-section" id="paymentSection" hidden>
+            <div class="payment-header">
+                <span class="payment-eyebrow">How to pay</span>
+                <h2 class="payment-title">Payment method</h2>
+            </div>
+
+            <div class="payment-methods" id="paymentMethods"></div>
+            <div class="payment-notice" id="paymentNotice" hidden></div>
+            <div class="payment-loading" id="paymentLoading">
+                <div class="payment-spinner"></div>
+                <span>Loading payment options...</span>
+            </div>
+        </div>
+
     </main>
 
     <!-- ============ RIGHT: STICKY SUMMARY (desktop) ============ -->
@@ -86,7 +101,7 @@
                 <span id="sumTotal">₹0.00</span>
             </div>
 
-            <button class="place-order-btn" id="placeOrderBtn">
+            <button class="place-order-btn" id="placeOrderBtn" disabled>
                 <span>Send to kitchen</span>
                 <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
@@ -122,7 +137,7 @@
         </div>
     </div>
 
-    <button class="place-order-btn place-order-btn-mobile" id="placeOrderBtnMobile">
+    <button class="place-order-btn place-order-btn-mobile" id="placeOrderBtnMobile" disabled>
         <span>Send to kitchen</span>
         <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
@@ -134,8 +149,33 @@
         <div class="confirm-check">
             <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h2>Order sent!</h2>
-        <p>The kitchen has your order for Table <span id="confirmTable">1</span>. You'll be able to track it from "My orders."</p>
+        <h2>Order confirmed!</h2>
+        <p id="confirmMessage">Your order has been sent to the kitchen.</p>
+        
+        <div class="confirm-details" id="confirmDetails">
+            <div class="confirm-detail-row">
+                <span class="confirm-detail-label">Order #</span>
+                <span class="confirm-detail-value" id="confirmOrderId">—</span>
+            </div>
+            <div class="confirm-detail-row">
+                <span class="confirm-detail-label">Table</span>
+                <span class="confirm-detail-value" id="confirmTable">—</span>
+            </div>
+            <div class="confirm-detail-row">
+                <span class="confirm-detail-label">Total</span>
+                <span class="confirm-detail-value" id="confirmTotal">₹0.00</span>
+            </div>
+            <div class="confirm-detail-row">
+                <span class="confirm-detail-label">Payment</span>
+                <span class="confirm-detail-value" id="confirmPayment">—</span>
+            </div>
+        </div>
+
+        <div class="confirm-qr" id="confirmQR" hidden>
+            <p class="confirm-qr-label">Scan to pay</p>
+            <img id="confirmQRImage" src="" alt="Payment QR Code" class="confirm-qr-image">
+        </div>
+
         <a href="/customer/api/my-orders" class="confirm-cta">View my orders</a>
         <button class="confirm-secondary" id="confirmKeepBrowsing">Keep browsing the menu</button>
     </div>
@@ -143,6 +183,7 @@
 
 <script>
     const TABLE_NUMBER = {{ order_ctx.customer.table_no if order_ctx else 0 }};
+    const PAYMENT_METHODS_ENDPOINT = '{{ url_for("cart_api.get_payment_methods") if url_for else "/api/payment-methods" }}';
 </script>
 <script src="{{ url_for('static', filename='js/customer/cart.js') }}"></script>
 
