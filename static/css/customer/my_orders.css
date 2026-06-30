@@ -1,0 +1,525 @@
+/* ===================================================================
+   KANS RESTO — MY ORDERS
+   Shares the design tokens from cart.css. Same receipt-stub language:
+   each order is a torn ticket, status told through a stamped badge
+   rather than a flat pill, with a perforated edge before the total.
+   =================================================================== */
+
+:root {
+    --ink:         #07090e;
+    --ink-raised:  #0d111a;
+    --ink-card:    #131926;
+    --line:        rgba(148, 163, 184, 0.06);
+    --line-strong: rgba(148, 163, 184, 0.12);
+
+    --amber:       #a855f7;
+    --amber-soft:  rgba(168, 85, 247, 0.1);
+
+    --moss:        #4f46e5;
+    --moss-bright: #6366f1;
+    --moss-soft:   rgba(79, 70, 229, 0.12);
+
+    --clay:        #f43f5e;
+    --clay-soft:   rgba(244, 63, 94, 0.12);
+
+    --gold:        #eab308;
+    --gold-soft:   rgba(234, 179, 8, 0.12);
+
+    --text-main:   #f8fafc;
+    --text-muted:  #94a3b8;
+    --text-dim:    #475569;
+
+    --shadow:      0 24px 60px rgba(3, 7, 18, 0.8);
+    --shadow-sm:   0 6px 18px rgba(3, 7, 18, 0.5);
+
+    --radius-lg:   16px;
+    --radius-md:   12px;
+    --radius-sm:   8px;
+
+    color-scheme: dark;
+}
+
+[data-theme="light"] {
+    --ink:        #f5f0e8;
+    --ink-raised: #fdfaf4;
+    --ink-card:   #ffffff;
+    --line:       rgba(40, 60, 48, 0.10);
+    --line-strong:rgba(40, 60, 48, 0.18);
+
+    --moss:       #2e6642;
+    --moss-bright:#3d8255;
+    --moss-soft:  rgba(46, 102, 66, 0.10);
+
+    --amber:      #9e6a28;
+    --amber-soft: rgba(158, 106, 40, 0.10);
+
+    --clay:       #b04430;
+    --clay-soft:  rgba(176, 68, 48, 0.10);
+
+    --gold:       #a07a14;
+    --gold-soft:  rgba(160, 122, 20, 0.12);
+
+    --text-main:  #1a2820;
+    --text-muted: #4e6858;
+    --text-dim:   #8fa898;
+
+    --shadow:     0 24px 60px rgba(20, 40, 28, 0.12);
+    --shadow-sm:  0 6px 18px rgba(20, 40, 28, 0.08);
+
+    color-scheme: light;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--ink);
+    color: var(--text-main);
+    transition: background 0.4s ease, color 0.4s ease;
+    min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Fraunces', serif; }
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--amber-soft); }
+
+/* ===================== TOP BAR ===================== */
+.orders-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 28px;
+    background: var(--ink-raised);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 80;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px 9px 10px;
+    border-radius: 50px;
+    border: 1px solid var(--line);
+    background: var(--ink-card);
+    color: var(--text-main);
+    font-size: 0.86rem;
+    font-weight: 600;
+    transition: border-color 0.2s ease, transform 0.15s ease;
+    flex-shrink: 0;
+}
+.back-btn:hover { border-color: var(--moss-bright); transform: translateX(-2px); }
+.back-btn svg { width: 17px; height: 17px; }
+
+.orders-bar-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    flex: 1;
+    text-align: center;
+}
+.orders-bar-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.02rem; }
+.orders-bar-table { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+
+.theme-toggle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--ink-card);
+    color: var(--text-main);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.25s ease;
+    flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--moss-bright); }
+.theme-toggle svg { width: 17px; height: 17px; }
+.icon-moon { display: none; }
+[data-theme="light"] .icon-sun { display: none; }
+[data-theme="light"] .icon-moon { display: block; }
+
+/* ===================== LAYOUT ===================== */
+.orders-main {
+    padding: 40px 28px 70px;
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.orders-head { margin-bottom: 28px; }
+
+.orders-eyebrow {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--amber);
+    font-weight: 700;
+}
+
+.orders-head h1 {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 700;
+    margin: 8px 0 8px;
+    line-height: 1.15;
+}
+
+.orders-sub { font-size: 0.92rem; color: var(--text-muted); line-height: 1.5; max-width: 480px; }
+
+/* ===================== FILTER TABS ===================== */
+.orders-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 22px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+}
+.orders-filters::-webkit-scrollbar { display: none; }
+
+.filter-chip {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid var(--line);
+    background: var(--ink-raised);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.filter-chip:hover { border-color: var(--moss-bright); color: var(--text-main); }
+.filter-chip.is-active {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: #fff;
+}
+
+/* ===================== ORDER LIST ===================== */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===================== ORDER TICKET ===================== */
+.order-ticket {
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    animation: cardIn 0.35s ease both;
+}
+
+@keyframes cardIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.order-ticket-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px 14px;
+}
+
+.order-id-block { display: flex; flex-direction: column; gap: 4px; }
+
+.order-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+}
+
+.order-time {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.order-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.order-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-pending  { background: var(--gold-soft);  color: var(--gold); }
+.status-preparing{ background: var(--amber-soft); color: var(--amber); }
+.status-completed{ background: var(--moss-soft);  color: var(--moss-bright); }
+.status-cancelled{ background: var(--clay-soft);  color: var(--clay); }
+
+.status-pending::before   { animation: pulseDot 1.6s ease-in-out infinite; }
+.status-preparing::before { animation: pulseDot 1.6s ease-in-out infinite; }
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+/* ----- item summary line ----- */
+.order-items-preview {
+    padding: 0 20px 14px;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+.order-items-preview strong { color: var(--text-main); font-weight: 600; }
+
+/* ----- perforated divider, matches the ticket motif ----- */
+.order-perf {
+    position: relative;
+    height: 1px;
+    margin: 0 20px;
+    border-top: 1px dashed var(--line-strong);
+}
+
+/* ----- footer: total + actions ----- */
+.order-ticket-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px 18px;
+}
+
+.order-total-block { display: flex; flex-direction: column; gap: 2px; }
+.order-total-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+.order-total-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.order-actions { display: flex; gap: 8px; }
+
+.view-bill-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--moss);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 50px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+.view-bill-btn:hover { background: var(--moss-bright); transform: translateY(-1px); }
+.view-bill-btn svg { width: 14px; height: 14px; }
+
+/* ===================== EMPTY STATE ===================== */
+.orders-empty {
+    text-align: center;
+    padding: 90px 20px;
+    color: var(--text-muted);
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+}
+.orders-empty-emoji { font-size: 2.6rem; margin-bottom: 14px; }
+.orders-empty h3 { font-size: 1.15rem; color: var(--text-main); margin-bottom: 8px; font-weight: 600; }
+.orders-empty p { font-size: 0.88rem; margin-bottom: 22px; }
+.orders-empty-cta {
+    display: inline-flex;
+    background: var(--moss);
+    color: #fff;
+    padding: 11px 26px;
+    border-radius: 50px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: background 0.22s ease, transform 0.2s ease;
+}
+.orders-empty-cta:hover { background: var(--moss-bright); transform: translateY(-2px); }
+
+/* ===================== SKELETON / LOADING ===================== */
+.skeleton-ticket {
+    background: var(--ink-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.skeleton-bar {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--ink-card) 25%, var(--line-strong) 50%, var(--ink-card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ===================== BILL OVERLAY ===================== */
+.bill-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 24px;
+    animation: fadeIn 0.25s ease;
+}
+.bill-overlay[hidden] { display: none; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.bill-card {
+    background: var(--ink-raised);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    max-width: 400px;
+    width: 100%;
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.bill-head {
+    padding: 24px 24px 16px;
+    text-align: center;
+    border-bottom: 1px dashed var(--line-strong);
+    position: relative;
+    flex-shrink: 0;
+}
+.bill-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--ink-card);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+.bill-close:hover { border-color: var(--clay); color: var(--clay); }
+.bill-close svg { width: 14px; height: 14px; }
+
+.bill-head h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+.bill-head .order-status { margin-top: 6px; }
+
+.bill-body {
+    padding: 18px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.bill-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.86rem;
+    padding: 8px 0;
+}
+.bill-row-name { color: var(--text-main); font-weight: 500; }
+.bill-row-qty { color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+.bill-row-price { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); white-space: nowrap; }
+
+.bill-divider { border-top: 1px dashed var(--line-strong); margin: 6px 0; }
+
+.bill-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    padding: 4px 0;
+    font-family: 'JetBrains Mono', monospace;
+}
+.bill-summary-row span:first-child { font-family: 'Inter', sans-serif; color: var(--text-main); }
+
+.bill-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    border-top: 1px dashed var(--line-strong);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.bill-total-row span:first-child { font-family: 'Fraunces', serif; font-size: 1.05rem; }
+.bill-total-row span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--amber); font-size: 1.05rem; }
+
+/* ===================== FOCUS / A11Y / MOTION ===================== */
+button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 640px) {
+    .orders-bar { padding: 14px 16px; }
+    .back-btn-label { display: none; }
+    .back-btn { padding: 9px; }
+
+    .orders-main { padding: 24px 16px 50px; }
+    .orders-head h1 { font-size: 1.4rem; }
+
+    .order-ticket-head { padding: 16px 16px 12px; }
+    .order-items-preview { padding: 0 16px 12px; }
+    .order-perf { margin: 0 16px; }
+    .order-ticket-foot {
+        padding: 12px 16px 16px;
+        flex-wrap: wrap;
+    }
+
+    .bill-card { max-width: 100%; }
+    .bill-head, .bill-body { padding-left: 18px; padding-right: 18px; }
+    .bill-total-row { padding-left: 18px; padding-right: 18px; }
+}
+
+@media (max-width: 380px) {
+    .order-status { font-size: 0.68rem; padding: 4px 10px; }
+    .view-bill-btn { padding: 9px 14px; font-size: 0.8rem; }
+}

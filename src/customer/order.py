@@ -10,6 +10,7 @@ import io
 import base64
 import qrcode
 from flask import current_app
+import json
 
 from src.extensions import db, csrf
 from src.models.order import Order
@@ -53,7 +54,7 @@ def place_customer_order():
 
     # The cart used by the customer UI is stored under 'cart_id' in many places
     # Prefer using 'cart_id' for cart operations, but fallback to 'session_id'
-    cart_session_id = session.get('cart_id') or session_id
+    cart_session_id = session_id
     
     # Get table number from Redis (PRIMARY) or Flask session (FALLBACK)
     table_no = session.get("table_no") # ← Fetch from Redis first
@@ -78,6 +79,12 @@ def place_customer_order():
     customer_name = "Walk-in"
     if customer_data:
         customer_name = customer_data.get("customer_name", "Walk-in")
+
+        print("=" * 50)
+        print("Searching Orders")
+        print("Table:", table_no)
+        print("Customer:", customer_name)
+        print("=" * 50)
     
     # Get Redis client
     # redis_client = current_app.config.get("REDIS_CLIENT")
@@ -191,6 +198,12 @@ def place_customer_order():
                     price_at_time=item["price"]
                 )
                 db.session.add(order_item)
+
+            print("=" * 50)
+            print("Creating Order")
+            print("Table:", table_no)
+            print("Customer:", customer_name)
+            print("=" * 50)
             
             db.session.commit()
             
@@ -338,6 +351,7 @@ def confirmation_page():
     
     return render_template('customer/confirmation.html', order=order, items=item_list, payment_method=payment_method)
 
+
 @customer_order_bp.route('/my-orders')
 def my_orders():
     session_id = session.get('session_id')
@@ -349,7 +363,7 @@ def my_orders():
     customer_data = get_customer_session(session_id)
 
     if not customer_data:
-        return render_template('customer/my_orders.html', orders=[], table_no=table_no)
+        return render_template('customer/my_orders.html', orders=[], table_no=table_no, orders_json='[]')
 
     customer_name = customer_data.get('customer_name', '')
     session_created_at = None
@@ -361,16 +375,32 @@ def my_orders():
             pass
 
     # Filter by table + customer name + session start time
-    query = Order.query.filter_by(table_no=table_no, customer_name=customer_name)
-    if session_created_at:
-        query = query.filter(Order.created_at >= session_created_at)
-    else:
-        # No created_at — safety fallback, only show last 30 mins
-        from datetime import timedelta
-        cutoff = datetime.utcnow() - timedelta(minutes=30)
-        query = query.filter(Order.created_at >= cutoff)
+    orders = (
+        Order.query
+        .filter_by(
+            table_no=table_no,
+            customer_name=customer_name
+        )
+        .order_by(Order.created_at.desc())
+        .all()
+    )
 
+    orders_json = json.dumps([{
+        "id": o.id,
+        "status": o.status,
+        "total_amount": float(o.total_amount),
+        "created_at": o.created_at.isoformat(),
+        "items": [{
+            "name": oi.menu_item.item_name,
+            "quantity": oi.quantity,
+            "price": float(oi.price_at_time)
+        } for oi in o.items]
+    } for o in orders])
 
-    orders = query.order_by(Order.created_at.desc()).all()
+    return render_template(
+        'customer/my_orders.html',
+        orders=orders,
+        table_no=table_no,
+        orders_json=orders_json
+    )
 
-    return render_template('customer/my_orders.html', orders=orders, table_no=table_no)

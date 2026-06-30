@@ -19,6 +19,8 @@ from src.models.qr_code import QRCode
 from src.models.activity_log import ActivityLog
 
 from src.customer.menu_services import customer_menu
+from src.customer.cart_api import cart_api_bp
+
 from src.setup import setuproute
 from src.test import test_route
 from flask import Flask
@@ -196,6 +198,7 @@ def createapp():
     app.register_blueprint(menuroute)
     app.register_blueprint(customer_order_bp)
     app.register_blueprint(greeting)
+    app.register_blueprint(cart_api_bp)
     # app.register_blueprint(customer_route)
 
     # for rule in app.url_map.iter_rules():

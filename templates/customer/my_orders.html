@@ -4,183 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kans Resto | My Orders</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-main: #eef3ec;
-            --bg-accent: #dfe8e2;
-            --card-bg: #fffdf9;
-            --accent: #8fae9b;
-            --accent-strong: #6f927f;
-            --text-main: #2f3a34;
-            --text-muted: #6b776f;
-            --shadow-premium: 0 20px 50px rgba(47, 58, 52, 0.15);
-            --shadow-card: 0 4px 12px rgba(47, 58, 52, 0.08);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body {
-            background: radial-gradient(circle at top, var(--bg-accent), var(--bg-main));
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            overflow: hidden;
-        }
-        .phone-container {
-            width: 100%;
-            max-width: 400px;
-            height: calc(100vh - 20px);
-            max-height: 750px;
-            background: var(--card-bg);
-            border-radius: 30px;
-            box-shadow: var(--shadow-premium);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 6px solid white;
-        }
-        .scroll-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 18px;
-            padding-bottom: 20px;
-        }
-        .scroll-content::-webkit-scrollbar { width: 6px; }
-        .scroll-content::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .back-btn {
-            text-decoration: none;
-            color: var(--text-main);
-            font-size: 1.3rem;
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-        .back-btn:hover { background: var(--bg-accent); }
-        h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--text-main); }
-        .table-badge {
-            margin-left: auto;
-            background: var(--accent);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        .order-card {
-            background: white;
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 12px;
-            border: 1px solid #f0f3f1;
-            box-shadow: var(--shadow-card);
-            animation: fadeInUp 0.4s ease backwards;
-        }
-        .order-card:nth-child(2) { animation-delay: 0.05s; }
-        .order-card:nth-child(3) { animation-delay: 0.1s; }
-        .order-card:nth-child(4) { animation-delay: 0.15s; }
-        .order-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .order-id {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--text-main);
-        }
-        .order-status {
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .status-pending { background: #fff3e0; color: #e67e22; }
-        .status-completed { background: #e8f5e9; color: #27ae60; }
-        .status-cancelled { background: #fdecea; color: #e74c3c; }
-        .order-meta {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-        .order-total {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--accent-strong);
-        }
-        .order-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #e8ede9;
-        }
-        .view-btn {
-            background: var(--text-main);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-        .view-btn:hover { background: var(--accent-strong); }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        .empty-icon { font-size: 3.5rem; margin-bottom: 12px; opacity: 0.3; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-</head>
-<body>
-<div class="phone-container">
-    <div class="scroll-content">
-        <div class="header">
-            <a href="{{ url_for('customer_menu.explore_menu') }}" class="back-btn">←</a>
-            <h1>My Orders</h1>
-            <span class="table-badge">Table {{ table_no }}</span>
-        </div>
 
-        {% if orders %}
-            {% for order in orders %}
-            <div class="order-card">
-                <div class="order-top">
-                    <span class="order-id">Order #{{ order.id }}</span>
-                    <span class="order-status status-{{ order.status | lower }}">{{ order.status }}</span>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer/my_orders.css') }}">
+</head>
+<body data-theme="dark">
+
+<!-- ============ TOP BAR ============ -->
+<header class="orders-bar">
+    <a href="{{ url_for('customer_menu.explore_menu') }}" class="back-btn" aria-label="Back to menu">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="back-btn-label">Menu</span>
+    </a>
+
+    <div class="orders-bar-mid">
+        <span class="orders-bar-title">My orders</span>
+        <span class="orders-bar-table">Table {{ table_no }}</span>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5V5M12 19V21.5M4.5 12H2M22 12H19.5M5.1 5.1L6.9 6.9M18.9 5.1L17.1 6.9M5.1 18.9L6.9 17.1M18.9 18.9L17.1 17.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20.5 14.2A8.4 8.4 0 0 1 9.8 3.5a8.8 8.8 0 1 0 10.7 10.7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+</header>
+
+<main class="orders-main">
+
+    <div class="orders-head">
+        <span class="orders-eyebrow">Table {{ table_no }}</span>
+        <h1>My orders</h1>
+        <p class="orders-sub">Everything you've sent to the kitchen today, newest first.</p>
+    </div>
+
+    {% if orders %}
+    <!-- Filter tabs -->
+    <div class="orders-filters" id="ordersFilters" role="tablist" aria-label="Filter orders by status">
+        <button class="filter-chip is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+        <button class="filter-chip" data-filter="pending" role="tab" aria-selected="false">Pending</button>
+        <button class="filter-chip" data-filter="preparing" role="tab" aria-selected="false">Preparing</button>
+        <button class="filter-chip" data-filter="completed" role="tab" aria-selected="false">Completed</button>
+        <button class="filter-chip" data-filter="cancelled" role="tab" aria-selected="false">Cancelled</button>
+    </div>
+    {% endif %}
+
+    <!-- Order list -->
+    <div class="orders-list" id="ordersList">
+        {% for order in orders %}
+        <article class="order-ticket" data-status="{{ order.status | lower }}" data-order-id="{{ order.id }}">
+            <div class="order-ticket-head">
+                <div class="order-id-block">
+                    <span class="order-id">ORDER #{{ "%04d" | format(order.id) }}</span>
+                    <span class="order-time">{{ order.created_at.strftime('%d %b, %I:%M %p') }}</span>
                 </div>
-                <div class="order-meta">
-                    {{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}
-                    &nbsp;·&nbsp; {{ order.customer_name }}
+                <span class="order-status status-{{ order.status | lower }}">{{ order.status }}</span>
+            </div>
+
+            <p class="order-items-preview">
+                {% if order.items %}
+                    {% for item in order.items[:3] %}<strong>{{ item.quantity }}×</strong> {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if order.items | length > 3 %} +{{ order.items | length - 3 }} more{% endif %}
+                {% else %}
+                    {{ order.customer_name }}
+                {% endif %}
+            </p>
+
+            <div class="order-perf"></div>
+
+            <div class="order-ticket-foot">
+                <div class="order-total-block">
+                    <span class="order-total-label">Total</span>
+                    <span class="order-total-amount">₹{{ "%.2f" | format(order.total_amount) }}</span>
                 </div>
-                <div class="order-bottom">
-                    <span class="order-total">₹{{ "%.2f" | format(order.total_amount) }}</span>
-                    <a href="/customer/api/confirmation?order_id={{ order.id }}" class="view-btn">View Bill →</a>
+                <div class="order-actions">
+                    <button class="view-bill-btn" data-order-id="{{ order.id }}">
+                        <span>View bill</span>
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">🧾</div>
-                <p>No orders yet</p>
-                <p style="font-size:0.85rem; margin-top:5px;">Your orders will appear here</p>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Empty state -->
+    <div class="orders-empty" id="ordersEmpty" {% if orders %}hidden{% endif %}>
+        <div class="orders-empty-emoji">🧾</div>
+        <h3>No orders yet</h3>
+        <p>Once you send something to the kitchen, it'll show up here.</p>
+        <a href="{{ url_for('customer_menu.explore_menu') }}" class="orders-empty-cta">Browse the menu</a>
+    </div>
+
+    <!-- No-results state (filter returns nothing) -->
+    <div class="orders-empty" id="ordersNoResults" hidden>
+        <div class="orders-empty-emoji">🔎</div>
+        <h3>Nothing here</h3>
+        <p>No orders match this filter yet.</p>
+    </div>
+
+</main>
+
+<!-- ============ BILL OVERLAY ============ -->
+<div class="bill-overlay" id="billOverlay" hidden>
+    <div class="bill-card">
+        <div class="bill-head">
+            <button class="bill-close" id="billClose" aria-label="Close bill">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <h2 id="billOrderId">Order #0000</h2>
+            <span class="orders-bar-table" id="billOrderTime">—</span>
+            <div>
+                <span class="order-status" id="billStatus">—</span>
             </div>
-        {% endif %}
+        </div>
+        <div class="bill-body" id="billBody">
+            <!-- Populated by JS -->
+        </div>
+        <div class="bill-total-row">
+            <span>Total</span>
+            <span id="billTotal">₹0.00</span>
+        </div>
     </div>
 </div>
+
+<script>
+    window.ORDERS_DATA = {{ orders_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/customer/my_orders.js') }}"></script>
+
 </body>
 </html>

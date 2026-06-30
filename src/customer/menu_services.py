@@ -53,10 +53,10 @@ def view_cart():
     if not is_verified_customer():
         return forbidden()
 
-    if "cart_id" not in session:
-        session["cart_id"] = str(uuid.uuid4())
-
-    session_id = session["cart_id"]
+    session_id = session.get("session_id")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        session["session_id"] = session_id
     ctx = get_cart(session_id)
 
     return render_template(
@@ -109,99 +109,100 @@ def get_menu_item_detail(item_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@customer_menu.route("/api/cart", methods=["POST"])
-@csrf.exempt
-def cart_action():
-    if not is_verified_customer():
-        return jsonify({"success": False, "error": "Unauthorized"}), 403
+# @customer_menu.route("/api/cart", methods=["POST"])
+# @csrf.exempt
+# def cart_action():
+#     if not is_verified_customer():
+#         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
-    try:
-        data = request.get_json(force=True)
-        item_id = int(data.get("item_id"))
-        action = data.get("action")
-    except Exception:
-        return jsonify({"success": False, "error": "Invalid request"}), 400
+#     try:
+#         data = request.get_json(force=True)
+#         item_id = int(data.get("item_id"))
+#         action = data.get("action")
+#     except Exception:
+#         return jsonify({"success": False, "error": "Invalid request"}), 400
 
-    if action not in {"ADD", "REMOVE", "DELETE"}:
-        return jsonify({"success": False, "error": "Invalid action"}), 400
+#     if action not in {"ADD", "REMOVE", "DELETE"}:
+#         return jsonify({"success": False, "error": "Invalid action"}), 400
 
-    if "cart_id" not in session:
-        session["cart_id"] = str(uuid.uuid4())
+#     session_id = session.get("session_id")
+#     if not session_id:
+#         session_id = str(uuid.uuid4())
+#         session["session_id"] = session_id
 
-    session_id = session["cart_id"]
-    ctx = get_cart(session_id)
-    cart = ctx.get("cart", [])
+#     ctx = get_cart(session_id)
+#     cart = ctx.get("cart", [])
 
-    item = MenuItem.query.get(item_id)
-    if not item or not item.is_active:
-        return jsonify({"success": False, "error": "Item unavailable"}), 404
+#     item = MenuItem.query.get(item_id)
+#     if not item or not item.is_active:
+#         return jsonify({"success": False, "error": "Item unavailable"}), 404
 
-    cart_item = next((i for i in cart if int(i["id"]) == int(item_id)), None)
+#     cart_item = next((i for i in cart if int(i["id"]) == int(item_id)), None)
 
-    if action == "ADD":
-        if cart_item:
-            if cart_item["quantity"] >= MAX_ITEM_QTY:
-                return jsonify({"success": False, "error": "Max quantity reached"}), 400
-            cart_item["quantity"] += 1
-        else:
-            if len(cart) >= MAX_CART_ITEMS:
-                return jsonify({"success": False, "error": "Cart limit reached"}), 400
-            cart.append({
-                "id": item.id,
-                "name": item.item_name,
-                "price": float(item.item_price),
-                "quantity": 1
-            })
+#     if action == "ADD":
+#         if cart_item:
+#             if cart_item["quantity"] >= MAX_ITEM_QTY:
+#                 return jsonify({"success": False, "error": "Max quantity reached"}), 400
+#             cart_item["quantity"] += 1
+#         else:
+#             if len(cart) >= MAX_CART_ITEMS:
+#                 return jsonify({"success": False, "error": "Cart limit reached"}), 400
+#             cart.append({
+#                 "id": item.id,
+#                 "name": item.item_name,
+#                 "price": float(item.item_price),
+#                 "quantity": 1
+#             })
 
-    elif action == "REMOVE":
-        if cart_item:
-            cart_item["quantity"] -= 1
-            if cart_item["quantity"] <= 0:
-                cart.remove(cart_item)
+#     elif action == "REMOVE":
+#         if cart_item:
+#             cart_item["quantity"] -= 1
+#             if cart_item["quantity"] <= 0:
+#                 cart.remove(cart_item)
 
-    elif action == "DELETE":
-        if cart_item:
-            cart.remove(cart_item)
+#     elif action == "DELETE":
+#         if cart_item:
+#             cart.remove(cart_item)
 
-    subtotal = sum(i["price"] * i["quantity"] for i in cart)
-    discount = round(subtotal * 0.10, 2)
-    tax = round((subtotal - discount) * 0.10, 2)
+#     subtotal = sum(i["price"] * i["quantity"] for i in cart)
+#     discount = round(subtotal * 0.10, 2)
+#     tax = round((subtotal - discount) * 0.10, 2)
 
-    ctx.update({
-        "cart": cart,
-        "totals": {
-            "subtotal": round(subtotal, 2),
-            "discount": discount,
-            "tax": tax,
-            "grand_total": round(subtotal - discount + tax, 2)
-        },
-        "version": ctx.get("version", 1) + 1
-    })
+#     ctx.update({
+#         "cart": cart,
+#         "totals": {
+#             "subtotal": round(subtotal, 2),
+#             "discount": discount,
+#             "tax": tax,
+#             "grand_total": round(subtotal - discount + tax, 2)
+#         },
+#         "version": ctx.get("version", 1) + 1
+#     })
 
-    save_cart(session_id, ctx)
+#     save_cart(session_id, ctx)
 
-    return jsonify({
-        "success": True,
-        "cart": cart,
-        "totals": ctx["totals"],
-        "version": ctx["version"]
-    })
+#     return jsonify({
+#         "success": True,
+#         "cart": cart,
+#         "totals": ctx["totals"],
+#         "version": ctx["version"]
+#     })
 
 
-@customer_menu.route("/api/cart/current", methods=["GET"])
-def current_cart():
-    if not is_verified_customer():
-        return jsonify({"success": False, "error": "Unauthorized"}), 403
+# @customer_menu.route("/api/cart/current", methods=["GET"])
+# def current_cart():
+#     if not is_verified_customer():
+#         return jsonify({"success": False, "error": "Unauthorized"}), 403
 
-    if "cart_id" not in session:
-        session["cart_id"] = str(uuid.uuid4())
+#     if "cart_id" not in session:
+#         session["cart_id"] = str(uuid.uuid4())
 
-    session_id = session["cart_id"]
-    ctx = get_cart(session_id)
+#     session_id = session["cart_id"]
+#     ctx = get_cart(session_id)
 
-    return jsonify({
-        "success": True,
-        "items": ctx.get("cart", []),
-        "totals": ctx.get("totals", {}),
-        "version": ctx.get("version", 1)
-    })
+#     return jsonify({
+#         "success": True,
+#         "items": ctx.get("cart", []),
+#         "totals": ctx.get("totals", {}),
+#         "version": ctx.get("version", 1)
+#     })

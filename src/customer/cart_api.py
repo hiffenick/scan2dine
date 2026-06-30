@@ -34,6 +34,35 @@ def _get_session_id():
     return session_id
 
 
+from src.models.setting import Setting
+from flask import jsonify
+
+@cart_api_bp.route("/payment-methods", methods=["GET"])
+def get_payment_methods():
+    """
+    Temporary hardcoded payment methods.
+    """
+
+    return jsonify({
+        "success": True,
+        "methods": [
+            {
+                "id": "cash",
+                "name": "Pay at Counter",
+                "description": "Pay by cash when your order is served.",
+                "icon": "cash"
+            },
+            {
+                "id": "online",
+                "name": "UPI",
+                "description": "Pay using any UPI app",
+                "icon": "upi",
+                "merchant": "Kans Resto",
+                "vpa": "kansresto@okaxis"
+            }
+        ]
+    })
+
 @cart_api_bp.route("/current", methods=["GET"])
 @csrf.exempt  # ← CSRF exemption for API endpoint
 def get_current_cart():
