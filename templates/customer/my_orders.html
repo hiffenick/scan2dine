@@ -72,6 +72,8 @@
 
             <div class="order-perf"></div>
 
+            <div class="order-payment-slot" data-payment-slot></div>
+
             <div class="order-ticket-foot">
                 <div class="order-total-block">
                     <span class="order-total-label">Total</span>
@@ -127,6 +129,62 @@
         </div>
     </div>
 </div>
+<!-- Payment card template (cloned per order via JS) -->
+<template id="paymentCardTemplate">
+  <div class="payment-card">
+    <div class="payment-card-head">
+      <span class="payment-card-eyebrow">Next step</span>
+      <h3 class="payment-card-title">Complete your payment</h3>
+      <p class="payment-card-sub">Thank you for dining with us. You can complete your payment using UPI or by paying cash at the counter.</p>
+    </div>
+
+    <div class="payment-status-row">
+      <span class="payment-status-label">Payment status</span>
+      <span class="payment-status-badge" data-payment-status-badge>Pending</span>
+    </div>
+
+    <!-- Choice state -->
+    <div class="payment-choice-row" data-payment-choice>
+      <button class="payment-option-btn is-upi" data-action="pay-upi">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h16M14 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Pay with UPI</span>
+      </button>
+      <button class="payment-option-btn is-counter" data-action="pay-counter">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M7 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Pay at Counter</span>
+      </button>
+    </div>
+
+    <!-- UPI QR state -->
+    <div class="payment-upi-panel" data-payment-upi hidden>
+      <img class="payment-upi-qr" data-payment-qr-img src="" alt="UPI payment QR code">
+      <p class="payment-upi-hint">Scan with any UPI app, then confirm below.</p>
+      <button class="payment-confirm-btn" data-action="confirm-paid">I've Paid</button>
+      <button class="payment-back-btn" data-action="back-to-choice">Choose a different method</button>
+    </div>
+
+    <!-- Counter chosen state -->
+    <div class="payment-counter-panel" data-payment-counter hidden>
+      <p>You have chosen to pay at the counter.<br>Please complete your payment with our staff before leaving.</p>
+      <button class="payment-back-btn" data-action="back-to-choice">Choose a different method</button>
+    </div>
+
+    <!-- Awaiting verification state -->
+    <div class="payment-awaiting-panel" data-payment-awaiting hidden>
+      <div class="payment-awaiting-spinner"></div>
+      <p class="payment-awaiting-msg">Our staff will verify your payment shortly.</p>
+    </div>
+
+    <!-- Paid / success state -->
+    <div class="payment-success-panel" data-payment-success hidden>
+      <div class="payment-success-check">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <p class="payment-success-title">Payment confirmed</p>
+      <p class="payment-success-sub">Thank you for dining with us.</p>
+    </div>
+  </div>
+</template>
 
 <script>
     window.ORDERS_DATA = {{ orders_json | safe }};

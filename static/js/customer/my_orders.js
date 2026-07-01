@@ -52,6 +52,7 @@ function escapeHtml(str) {
 function loadInitial() {
   orders = Array.isArray(window.ORDERS_DATA) ? window.ORDERS_DATA : [];
   applyFilter(activeFilter, { skipServerRows: true });
+  renderPaymentSlots();
 }
 
 /* ─────────────────────────────────────────────
@@ -195,3 +196,206 @@ document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
 ───────────────────────────────────────────── */
 
 document.addEventListener('DOMContentLoaded', loadInitial);
+
+/* ─────────────────────────────────────────────
+   PAYMENT CARD (Served-stage only)
+   State kept in-memory per order id; UPI QR cached
+   once fetched so re-render doesn't refetch.
+───────────────────────────────────────────── */
+
+const PAYMENT_TEMPLATE = document.getElementById('paymentCardTemplate');
+const paymentStateByOrder = {}; // { [orderId]: 'choice' | 'upi' | 'counter' | 'awaiting' | 'paid' }
+const upiQrCache = {};
+
+function renderPaymentSlots() {
+  document.querySelectorAll('.order-ticket').forEach((card) => {
+    const orderId = card.dataset.orderId;
+    const order = findOrder(orderId);
+    const slot = card.querySelector('[data-payment-slot]');
+    if (!order || !slot) return;
+
+    const isServed = (order.status || '').toLowerCase() === 'served';
+
+    if (!isServed) {
+      slot.innerHTML = '';
+      return;
+    }
+
+    // Already built for this card — just sync state, don't rebuild the DOM
+    if (!slot.querySelector('.payment-card')) {
+      const node = PAYMENT_TEMPLATE.content.cloneNode(true);
+      slot.appendChild(node);
+      wirePaymentCard(slot, order);
+    }
+
+    syncPaymentCardState(slot, order);
+  });
+}
+
+function initialPaymentState(order) {
+  if (order.payment_status === 'paid') return 'paid';
+  if (order.payment_status === 'awaiting_verification') return 'awaiting';
+  return paymentStateByOrder[order.id] || 'choice';
+}
+
+function wirePaymentCard(slot, order) {
+  const card = slot.querySelector('.payment-card');
+
+  card.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+
+    if (action === 'pay-upi') {
+      paymentStateByOrder[order.id] = 'upi';
+      await ensureUpiQr(order.id);
+      syncPaymentCardState(slot, order);
+    }
+
+    if (action === 'pay-counter') {
+      paymentStateByOrder[order.id] = 'counter';
+      syncPaymentCardState(slot, order);
+    }
+
+    if (action === 'back-to-choice') {
+      paymentStateByOrder[order.id] = 'choice';
+      syncPaymentCardState(slot, order);
+    }
+
+    if (action === 'confirm-paid') {
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/customer/api/orders/${order.id}/mark-awaiting`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          order.payment_status = data.payment_status;
+          paymentStateByOrder[order.id] = 'awaiting';
+          syncPaymentCardState(slot, order);
+        }
+      } catch (err) {
+        console.error('❌ Failed to mark awaiting verification:', err);
+        btn.disabled = false;
+      }
+    }
+  });
+}
+
+async function ensureUpiQr(orderId) {
+  if (upiQrCache[orderId]) return upiQrCache[orderId];
+  try {
+    const res = await fetch(`/customer/api/orders/${orderId}/upi-qr`);
+    const data = await res.json();
+    if (data.success) {
+      upiQrCache[orderId] = data.upi_qr_base64;
+      return data.upi_qr_base64;
+    }
+  } catch (err) {
+    console.error('❌ Failed to fetch UPI QR:', err);
+  }
+  return null;
+}
+
+function syncPaymentCardState(slot, order) {
+  const state = initialPaymentState(order);
+
+  const badge = slot.querySelector('[data-payment-status-badge]');
+  const choice = slot.querySelector('[data-payment-choice]');
+  const upiPanel = slot.querySelector('[data-payment-upi]');
+  const counterPanel = slot.querySelector('[data-payment-counter]');
+  const awaitingPanel = slot.querySelector('[data-payment-awaiting]');
+  const successPanel = slot.querySelector('[data-payment-success]');
+  const qrImg = slot.querySelector('[data-payment-qr-img]');
+
+  choice.hidden = true;
+  upiPanel.hidden = true;
+  counterPanel.hidden = true;
+  awaitingPanel.hidden = true;
+  successPanel.hidden = true;
+
+  if (state === 'paid') {
+    badge.textContent = 'Paid';
+    badge.dataset.state = 'paid';
+    successPanel.hidden = false;
+    return;
+  }
+
+  if (state === 'awaiting') {
+    badge.textContent = 'Awaiting Verification';
+    badge.dataset.state = 'awaiting';
+    awaitingPanel.hidden = false;
+    return;
+  }
+
+  badge.textContent = 'Pending';
+  badge.dataset.state = 'pending';
+
+  if (state === 'upi') {
+    upiPanel.hidden = false;
+    if (qrImg && upiQrCache[order.id]) qrImg.src = upiQrCache[order.id];
+    return;
+  }
+
+  if (state === 'counter') {
+    counterPanel.hidden = false;
+    return;
+  }
+
+  choice.hidden = false;
+}
+
+/* ─────────────────────────────────────────────
+   POLL — pick up admin verification + status changes
+   without a full page reload. Every 12s, only while
+   at least one order is in a pollable state.
+───────────────────────────────────────────── */
+
+function getPollableIds() {
+  return orders
+    .filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return s !== 'closed' && s !== 'cancelled';
+    })
+    .map(o => o.id);
+}
+
+async function pollOrderUpdates() {
+  const ids = getPollableIds();
+  if (ids.length === 0) return;
+
+  try {
+    const res = await fetch(`/customer/api/my-orders/status-poll?ids=${ids.join(',')}`);
+    const data = await res.json();
+    if (!data.success) return;
+
+    let changed = false;
+    data.orders.forEach((update) => {
+      const order = findOrder(update.id);
+      if (!order) return;
+      if (order.status !== update.status || order.payment_status !== update.payment_status) {
+        order.status = update.status;
+        order.payment_status = update.payment_status;
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      // Reflect status changes on the visible card chip + re-sync payment card
+      document.querySelectorAll('.order-ticket').forEach((card) => {
+        const order = findOrder(card.dataset.orderId);
+        if (!order) return;
+        card.dataset.status = (order.status || '').toLowerCase();
+        const statusEl = card.querySelector('.order-status');
+        if (statusEl) {
+          statusEl.textContent = order.status;
+          statusEl.className = `order-status status-${(order.status || '').toLowerCase()}`;
+        }
+      });
+      applyFilter(activeFilter);
+      renderPaymentSlots();
+    }
+  } catch (err) {
+    console.error('❌ Poll failed:', err);
+  }
+}
+
+setInterval(pollOrderUpdates, 12000);
