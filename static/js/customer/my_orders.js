@@ -234,7 +234,8 @@ function renderPaymentSlots() {
 
 function initialPaymentState(order) {
   if (order.payment_status === 'paid') return 'paid';
-  if (order.payment_status === 'awaiting_verification') return 'awaiting';
+  if (order.payment_status === 'awaiting_verification') return 'upi';
+  if (order.payment_method === 'cash') return 'counter';
   return paymentStateByOrder[order.id] || 'choice';
 }
 
@@ -247,12 +248,16 @@ function wirePaymentCard(slot, order) {
     const action = btn.dataset.action;
 
     if (action === 'pay-upi') {
+      const ok = await recordPaymentSelection(order.id, 'upi');
+      if (!ok) return;
       paymentStateByOrder[order.id] = 'upi';
       await ensureUpiQr(order.id);
       syncPaymentCardState(slot, order);
     }
 
     if (action === 'pay-counter') {
+      const ok = await recordPaymentSelection(order.id, 'cash');
+      if (!ok) return;
       paymentStateByOrder[order.id] = 'counter';
       syncPaymentCardState(slot, order);
     }
@@ -278,6 +283,30 @@ function wirePaymentCard(slot, order) {
       }
     }
   });
+}
+
+async function recordPaymentSelection(orderId, method) {
+  try {
+    const res = await fetch(`/customer/api/orders/${orderId}/select-payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.error('Payment selection failed:', data.error);
+      return false;
+    }
+    const order = findOrder(orderId);
+    if (order) {
+      order.payment_method = data.payment_method;
+      order.payment_status = data.payment_status;
+    }
+    return true;
+  } catch (err) {
+    console.error('❌ Failed to record payment selection:', err);
+    return false;
+  }
 }
 
 async function ensureUpiQr(orderId) {

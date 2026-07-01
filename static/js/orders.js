@@ -324,12 +324,16 @@
     document.getElementById('modalEyebrow').textContent = 'ORDER · ' + order.id;
     document.getElementById('modalTitle').textContent   = 'Table ' + order.table;
 
+    const payStatusLabel = order.payment_status === 'awaiting_verification'
+      ? 'Awaiting Verification'
+      : capitalize(order.payment_status);
+
     document.getElementById('modalBody').innerHTML =
       '<div class="modal-info-row">' +
         infoCell('Order ID', order.id) +
         infoCell('Status',   order.status) +
         infoCell('Time',     timeStr + ' · ' + dateStr) +
-        infoCell('Payment',  capitalize(order.payment_status) + ' · ' + payMethod) +
+        infoCell('Payment',  payStatusLabel + ' · ' + payMethod) +
       '</div>' +
       (order.payment_reference
         ? '<p class="modal-items-label" style="margin-bottom:.4rem">UPI Reference</p>' +
@@ -372,13 +376,27 @@
         msg.textContent = '✓ Payment confirmed — ready to close';
         footer.appendChild(msg);
         footer.appendChild(makeBtn('ghost', 'Close Order', function () { updateStatus('Closed'); }));
-      } else {
+        } else {
         const warn = document.createElement('div');
         warn.className = 'modal-urgent';
-        warn.textContent = '⚠ Payment pending — collect before closing';
-        footer.appendChild(warn);
-        footer.appendChild(makeBtn('primary', '💵 Cash Paid', function () { openPayModal('cash'); }));
-        footer.appendChild(makeBtn('primary', '📱 UPI Paid',  function () { openPayModal('upi_manual'); }));
+
+        if (order.payment_method === 'cash') {
+          warn.textContent = '💵 Customer selected Cash — awaiting collection';
+          footer.appendChild(warn);
+          footer.appendChild(makeBtn('primary', '✓ Confirm Cash Received', function () { openPayModal('cash'); }));
+
+        } else if (order.payment_method === 'upi' || order.payment_status === 'awaiting_verification') {
+          warn.textContent = '📱 Customer selected UPI — awaiting verification';
+          footer.appendChild(warn);
+          footer.appendChild(makeBtn('primary', 'Enter UPI Transaction ID', function () { openPayModal('upi_manual'); }));
+
+        } else {
+          warn.textContent = '⚠ Payment pending — customer has not chosen yet';
+          footer.appendChild(warn);
+          footer.appendChild(makeBtn('primary', '💵 Cash Paid', function () { openPayModal('cash'); }));
+          footer.appendChild(makeBtn('primary', '📱 UPI Paid',  function () { openPayModal('upi_manual'); }));
+        }
+
         const dis = makeBtn('ghost', 'Close Order', null);
         dis.disabled = true;
         dis.title = 'Collect payment first';

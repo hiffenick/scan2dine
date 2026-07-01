@@ -393,6 +393,7 @@ def my_orders():
         "status": o.status,
         "total_amount": float(o.total_amount),
         "payment_status": o.payment_status,
+        "payment_method": o.payment_method,
         "created_at": o.created_at.isoformat(),
         "items": [{
             "name": oi.menu_item.item_name,
@@ -415,9 +416,10 @@ def get_order_upi_qr(order_id):
     order = Order.query.get(order_id)
     if not order:
         return jsonify({"success": False, "error": "Order not found"}), 404
-
-    upi_vpa = Setting.get('UPI_VPA', current_app.config.get('UPI_VPA', 'merchant@upi'))
-    upi_name = Setting.get('UPI_MERCHANT_NAME', current_app.config.get('UPI_MERCHANT_NAME', 'Cafe'))
+    
+    payment_setting = PaymentSetting.get()
+    upi_vpa = payment_setting.upi_id or current_app.config.get('UPI_VPA', 'merchant@upi')
+    upi_name = payment_setting.account_name or current_app.config.get('UPI_MERCHANT_NAME', 'Cafe')
     currency = current_app.config.get('UPI_CURRENCY', 'INR')
     amt_str = f"{order.total_amount:.2f}"
     note = f"Order {order.id}"
@@ -443,8 +445,8 @@ def mark_order_awaiting_verification(order_id):
     if not order:
         return jsonify({"success": False, "error": "Order not found"}), 404
 
-    if order.payment_status == 'pending':
-        order.payment_status = 'awaiting_verification'
+    if order.payment_status == 'unpaid':
+        order.payment_status = 'awaiting'
         db.session.commit()
 
     return jsonify({"success": True, "payment_status": order.payment_status})
@@ -469,6 +471,42 @@ def my_orders_status_poll():
         "orders": [{
             "id": o.id,
             "status": o.status,
-            "payment_status": o.payment_status
+            "payment_status": o.payment_status,
+            "payment_method": o.payment_method
         } for o in orders]
+    })
+
+@customer_order_bp.route("/orders/<int:order_id>/select-payment", methods=["POST"])
+@csrf.exempt
+def select_payment_method(order_id):
+    """
+    Customer selects intended payment method on the Served-stage payment card.
+    This ONLY records intent — it never marks the order as paid.
+    Admin still verifies manually via /admin/api/orders/<id>/payment.
+    """
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({"success": False, "error": "Order not found"}), 404
+
+    if order.status != 'Served':
+        return jsonify({"success": False, "error": "Order is not yet served"}), 400
+
+    if order.payment_status == 'paid':
+        return jsonify({"success": False, "error": "Payment already verified"}), 400
+
+    data = request.get_json(silent=True) or {}
+    method = (data.get('method') or '').strip().lower()
+
+    if method not in ('cash', 'upi'):
+        return jsonify({"success": False, "error": "Invalid payment method"}), 400
+
+    order.payment_method = method
+    order.payment_status = 'awaiting' if method == 'upi' else 'unpaid'
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "payment_method": order.payment_method,
+        "payment_status": order.payment_status
     })
