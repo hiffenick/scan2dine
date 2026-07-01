@@ -19,8 +19,8 @@ const TAX_RATE = 0.10;
 ───────────────────────────────────────────── */
 
 let cart = [];
-let paymentMethods = [];
-let selectedPaymentMethod = null;
+// let paymentMethods = [];
+// let selectedPaymentMethod = null;
 
 async function loadCartFromServer() {
   try {
@@ -69,120 +69,120 @@ async function updateCartOnServer(itemId, action, itemName = '') {
   }
 }
 
-async function loadPaymentMethods() {
-  const paymentLoading = document.getElementById('paymentLoading');
-  const paymentMethods_ = document.getElementById('paymentMethods');
+// async function loadPaymentMethods() {
+//   const paymentLoading = document.getElementById('paymentLoading');
+//   const paymentMethods_ = document.getElementById('paymentMethods');
   
-  try {
-    // Try the modern endpoint first, fall back to legacy
-    let endpoint = typeof PAYMENT_METHODS_ENDPOINT !== 'undefined' 
-      ? PAYMENT_METHODS_ENDPOINT 
-      : '/api/payment-methods';
+//   try {
+//     // Try the modern endpoint first, fall back to legacy
+//     let endpoint = typeof PAYMENT_METHODS_ENDPOINT !== 'undefined' 
+//       ? PAYMENT_METHODS_ENDPOINT 
+//       : '/api/payment-methods';
     
-    const res = await fetch(endpoint);
+//     const res = await fetch(endpoint);
     
-    if (!res.ok) {
-      // Fallback endpoint
-      endpoint = '/api/payment-methods';
-      const fallbackRes = await fetch(endpoint);
-      if (!fallbackRes.ok) throw new Error('Failed to load payment methods');
-      const data = await fallbackRes.json();
-      paymentMethods = data.methods || [];
-    } else {
-      const data = await res.json();
-      paymentMethods = data.methods || data.payment_methods || [];
-    }
+//     if (!res.ok) {
+//       // Fallback endpoint
+//       endpoint = '/api/payment-methods';
+//       const fallbackRes = await fetch(endpoint);
+//       if (!fallbackRes.ok) throw new Error('Failed to load payment methods');
+//       const data = await fallbackRes.json();
+//       paymentMethods = data.methods || [];
+//     } else {
+//       const data = await res.json();
+//       paymentMethods = data.methods || data.payment_methods || [];
+//     }
 
-    if (paymentLoading) paymentLoading.hidden = true;
-    renderPaymentMethods();
-  } catch (err) {
-    console.error('❌ Failed to load payment methods:', err);
-    // Gracefully fall back to empty state
-    paymentMethods = [];
-    if (paymentLoading) paymentLoading.hidden = true;
-    if (paymentMethods_) paymentMethods_.innerHTML = '<p style="color: var(--text-muted); font-size: 0.88rem; text-align: center;">Payment methods unavailable. Please contact support.</p>';
-  }
-}
+//     if (paymentLoading) paymentLoading.hidden = true;
+//     renderPaymentMethods();
+//   } catch (err) {
+//     console.error('❌ Failed to load payment methods:', err);
+//     // Gracefully fall back to empty state
+//     paymentMethods = [];
+//     if (paymentLoading) paymentLoading.hidden = true;
+//     if (paymentMethods_) paymentMethods_.innerHTML = '<p style="color: var(--text-muted); font-size: 0.88rem; text-align: center;">Payment methods unavailable. Please contact support.</p>';
+//   }
+// }
 
-function renderPaymentMethods() {
-  const paymentMethodsContainer = document.getElementById('paymentMethods');
-  const paymentNotice = document.getElementById('paymentNotice');
-  const paymentSection = document.getElementById('paymentSection');
+// function renderPaymentMethods() {
+//   const paymentMethodsContainer = document.getElementById('paymentMethods');
+//   const paymentNotice = document.getElementById('paymentNotice');
+//   const paymentSection = document.getElementById('paymentSection');
 
-  if (!paymentMethodsContainer || !paymentSection) return;
+//   if (!paymentMethodsContainer || !paymentSection) return;
 
-  // Hide section if no methods available
-  if (!paymentMethods || paymentMethods.length === 0) {
-    paymentSection.hidden = true;
-    return;
-  }
+//   // Hide section if no methods available
+//   if (!paymentMethods || paymentMethods.length === 0) {
+//     paymentSection.hidden = true;
+//     return;
+//   }
 
-  // Build payment method options
-  const html = paymentMethods.map(method => {
-    const methodId = method.id || method.method_id || method.type;
-    const methodName = method.name || method.display_name || methodId;
-    const methodDesc = method.description || getPaymentMethodDescription(methodId);
-    const isSelected = selectedPaymentMethod === methodId;
+//   // Build payment method options
+//   const html = paymentMethods.map(method => {
+//     const methodId = method.id || method.method_id || method.type;
+//     const methodName = method.name || method.display_name || methodId;
+//     const methodDesc = method.description || getPaymentMethodDescription(methodId);
+//     const isSelected = selectedPaymentMethod === methodId;
 
-    return `
-      <div class="payment-method ${isSelected ? 'is-selected' : ''}" data-method-id="${methodId}">
-        <div class="payment-radio"></div>
-        <div class="payment-method-content">
-          <span class="payment-method-label">${escapeHtml(methodName)}</span>
-          <span class="payment-method-desc">${escapeHtml(methodDesc)}</span>
-        </div>
-      </div>
-    `;
-  }).join('');
+//     return `
+//       <div class="payment-method ${isSelected ? 'is-selected' : ''}" data-method-id="${methodId}">
+//         <div class="payment-radio"></div>
+//         <div class="payment-method-content">
+//           <span class="payment-method-label">${escapeHtml(methodName)}</span>
+//           <span class="payment-method-desc">${escapeHtml(methodDesc)}</span>
+//         </div>
+//       </div>
+//     `;
+//   }).join('');
 
-  paymentMethodsContainer.innerHTML = html;
+//   paymentMethodsContainer.innerHTML = html;
 
-  // If only one payment method, auto-select and show notice
-  if (paymentMethods.length === 1 && !selectedPaymentMethod) {
-    selectedPaymentMethod = paymentMethods[0].id || paymentMethods[0].method_id || paymentMethods[0].type;
-    updatePaymentMethodUI();
+//   // If only one payment method, auto-select and show notice
+//   if (paymentMethods.length === 1 && !selectedPaymentMethod) {
+//     selectedPaymentMethod = paymentMethods[0].id || paymentMethods[0].method_id || paymentMethods[0].type;
+//     updatePaymentMethodUI();
     
-    if (paymentNotice) {
-      paymentNotice.hidden = false;
-      paymentNotice.textContent = `Payment will be processed via ${escapeHtml(paymentMethods[0].name || selectedPaymentMethod)}`;
-    }
-  } else {
-    if (paymentNotice) paymentNotice.hidden = true;
-  }
+//     if (paymentNotice) {
+//       paymentNotice.hidden = false;
+//       paymentNotice.textContent = `Payment will be processed via ${escapeHtml(paymentMethods[0].name || selectedPaymentMethod)}`;
+//     }
+//   } else {
+//     if (paymentNotice) paymentNotice.hidden = true;
+//   }
 
-  // Add event listeners
-  document.querySelectorAll('.payment-method').forEach(el => {
-    el.addEventListener('click', () => selectPaymentMethod(el.dataset.methodId));
-  });
-}
+//   // Add event listeners
+//   document.querySelectorAll('.payment-method').forEach(el => {
+//     el.addEventListener('click', () => selectPaymentMethod(el.dataset.methodId));
+//   });
+// }
 
-function updatePaymentMethodUI() {
-  document.querySelectorAll('.payment-method').forEach(el => {
-    const methodId = el.dataset.methodId;
-    if (methodId === selectedPaymentMethod) {
-      el.classList.add('is-selected');
-    } else {
-      el.classList.remove('is-selected');
-    }
-  });
-}
+// function updatePaymentMethodUI() {
+//   document.querySelectorAll('.payment-method').forEach(el => {
+//     const methodId = el.dataset.methodId;
+//     if (methodId === selectedPaymentMethod) {
+//       el.classList.add('is-selected');
+//     } else {
+//       el.classList.remove('is-selected');
+//     }
+//   });
+// }
 
-function selectPaymentMethod(methodId) {
-  selectedPaymentMethod = methodId;
-  updatePaymentMethodUI();
-}
+// function selectPaymentMethod(methodId) {
+//   selectedPaymentMethod = methodId;
+//   updatePaymentMethodUI();
+// }
 
-function getPaymentMethodDescription(methodId) {
-  const descriptions = {
-    'pay_at_counter': 'Pay when your order is ready',
-    'upi': 'Secure payment via UPI',
-    'card': 'Credit or debit card',
-    'cash': 'Pay with cash',
-    'online': 'Online payment',
-    'digital_wallet': 'Digital wallet payment'
-  };
-  return descriptions[methodId] || 'Select this payment method';
-}
+// function getPaymentMethodDescription(methodId) {
+//   const descriptions = {
+//     'pay_at_counter': 'Pay when your order is ready',
+//     'upi': 'Secure payment via UPI',
+//     'card': 'Credit or debit card',
+//     'cash': 'Pay with cash',
+//     'online': 'Online payment',
+//     'digital_wallet': 'Digital wallet payment'
+//   };
+//   return descriptions[methodId] || 'Select this payment method';
+// }
 
 /* ─────────────────────────────────────────────
    DOM REFS
@@ -195,7 +195,7 @@ const cartHeading   = document.getElementById('cartHeading');
 const cartSub       = document.getElementById('cartSub');
 const summaryRail   = document.getElementById('summaryRail');
 const mobileSummary = document.getElementById('mobileSummary');
-const paymentSection = document.getElementById('paymentSection');
+// const paymentSection = document.getElementById('paymentSection');
 
 const formatCurrency = (n) => `₹${n.toFixed(2)}`;
 
@@ -208,7 +208,7 @@ function renderCart() {
     ticketList.hidden = true;
     ticketList.innerHTML = '';
     noteBlock.hidden = true;
-    paymentSection.hidden = true;
+    // paymentSection.hidden = true;
     summaryRail.hidden = true;
     mobileSummary.hidden = true;
     cartEmpty.hidden = false;
@@ -220,7 +220,7 @@ function renderCart() {
 
   cartEmpty.hidden = true;
   noteBlock.hidden = false;
-  paymentSection.hidden = false;
+  // paymentSection.hidden = false;
   summaryRail.hidden = false;
   mobileSummary.hidden = false;
   ticketList.hidden = false;
@@ -383,9 +383,9 @@ const confirmOverlay = document.getElementById('confirmOverlay');
 const confirmTable = document.getElementById('confirmTable');
 const confirmOrderId = document.getElementById('confirmOrderId');
 const confirmTotal = document.getElementById('confirmTotal');
-const confirmPayment = document.getElementById('confirmPayment');
-const confirmQR = document.getElementById('confirmQR');
-const confirmQRImage = document.getElementById('confirmQRImage');
+// const confirmPayment = document.getElementById('confirmPayment');
+// const confirmQR = document.getElementById('confirmQR');
+// const confirmQRImage = document.getElementById('confirmQRImage');
 const confirmMessage = document.getElementById('confirmMessage');
 
 function getSelectedPaymentMethodName() {
@@ -400,10 +400,10 @@ async function submitOrder() {
   const { count } = computeTotals();
 
   if (count === 0) return;
-  if (!selectedPaymentMethod) {
-    alert('Please select a payment method');
-    return;
-  }
+  // if (!selectedPaymentMethod) {
+  //   alert('Please select a payment method');
+  //   return;
+  // }
 
   const orderNote = document.getElementById('orderNote')?.value || '';
 
@@ -412,7 +412,6 @@ async function submitOrder() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        payment_method: selectedPaymentMethod,
         notes: orderNote
       })
     });
@@ -436,19 +435,21 @@ function showOrderConfirmation(orderData) {
   setText('confirmOrderId', orderData.order_id ?? '—');
   setText('confirmTable', typeof TABLE_NUMBER !== 'undefined' ? TABLE_NUMBER : '—');
   setText('confirmTotal', formatCurrency(orderData.total ?? 0));
-  setText('confirmPayment', getSelectedPaymentMethodName());
+  // setText('confirmPayment', getSelectedPaymentMethodName());
 
-  const confirmQRSection = document.getElementById('confirmQR');
-  if (orderData.payment_method === 'online' && orderData.upi_qr_base64) {
-    if (confirmQRSection) {
-      confirmQRSection.hidden = false;
-      confirmQRImage.src = orderData.upi_qr_base64;
-      confirmMessage.textContent = 'Scan the QR code below to complete your payment.';
-    }
-  } else {
-    if (confirmQRSection) confirmQRSection.hidden = true;
-    confirmMessage.textContent = 'Your order has been sent to the kitchen.';
-  }
+  confirmMessage.textContent = 'Your order has been sent to the kitchen.';
+
+  // const confirmQRSection = document.getElementById('confirmQR');
+  // if (orderData.payment_method === 'online' && orderData.upi_qr_base64) {
+  //   if (confirmQRSection) {
+  //     confirmQRSection.hidden = false;
+  //     confirmQRImage.src = orderData.upi_qr_base64;
+  //     confirmMessage.textContent = 'Scan the QR code below to complete your payment.';
+  //   }
+  // } else {
+  //   if (confirmQRSection) confirmQRSection.hidden = true;
+  //   confirmMessage.textContent = 'Your order has been sent to the kitchen.';
+  // }
 
   confirmOverlay.hidden = false;
 
@@ -475,5 +476,5 @@ document.getElementById('confirmKeepBrowsing')?.addEventListener('click', () => 
 
 document.addEventListener('DOMContentLoaded', () => {
   loadCartFromServer();
-  loadPaymentMethods();
+  // loadPaymentMethods();
 });
