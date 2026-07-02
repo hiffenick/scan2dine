@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, request
+from flask import jsonify, render_template, request,session
 from flask_login import login_required,current_user
 from src import db
 from src.auth.decorators import no_cache
@@ -8,6 +8,7 @@ from src.models.menu import MenuItem
 from src.extensions import csrf
 from datetime import datetime
 from src.services.activity import log_activity
+from src.services.redis_session import delete_customer_session
 
 from . import admin_bp
 
@@ -82,9 +83,31 @@ def update_order_status(order_id):
     order.status = new_status
 
     # Release table only when fully closed + paid
-    if new_status == 'Closed':
-        from src.services.qr_token import release_table
-        release_table(order.table_no)
+    # Release table only when fully closed + paid
+    if new_status == "Closed":
+        remaining_orders = (
+        Order.query.filter(
+            Order.table_no == order.table_no,
+            Order.customer_session_id == order.customer_session_id,
+            Order.id != order.id,
+            Order.status.in_(["Pending", "Preparing", "Served"])
+        ).count()
+    )
+
+        if remaining_orders == 0:
+            from src.services.qr_token import release_table
+            release_table(order.table_no)
+
+            if order.customer_session_id:
+                delete_customer_session(order.customer_session_id)
+                print(f"🗑️ Deleted customer session {order.customer_session_id}")
+
+            print(f"✅ Table {order.table_no} released")
+        else:
+            print(
+                f"⏳ Table {order.table_no} still has "
+                f"{remaining_orders} active order(s)"
+            )
 
     db.session.commit()
     log_activity(current_user.id, "order", f"Updated order #ORD-{order.id} → {order.status}")
@@ -246,6 +269,7 @@ def create_order():
         # Create order
         new_order = Order(
             customer_name=customer_name,
+            customer_session_id=session.get("session_id"),  
             table_no=table_no,
             total_amount=total,
             status=status,
@@ -431,6 +455,7 @@ def create_order_form():
         # CREATE ORDER
         # ---------------------------
         order = Order(
+            customer_session_id=session.get("session_id"),   
             customer_name=data.get("customer_name"),
             customer_phone=data.get("customer_phone"),
             table_no=data.get("table_no"),

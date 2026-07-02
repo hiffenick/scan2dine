@@ -27,22 +27,33 @@ def customer_menu(table_number):
         token_verified
     )
     print(f"already_has_session: {already_has_session}")
+    print(">>> ABOUT TO CALL get_table_lock()")
+
+    lock = get_table_lock(table_number)
+
+    print(">>> LOCK =", lock)
 
     # ✅ Bug 3 fix — if they have a session but lock is gone or belongs to someone else, clear them out
-    if already_has_session:
-        lock = get_table_lock(table_number)
-        if not lock:
-            print(f"⚠️ Session exists but table lock is gone — clearing session")
-            session.clear()
-            session.modified = True
-            return render_template('customer/forbidden.html',
-                reason="Your session has ended. Thank you for dining with us!"), 403
-        if lock.get("session_id") != existing_session_id:
-            print(f"⚠️ Session exists but lock belongs to someone else — clearing session")
-            session.clear()
-            session.modified = True
-            return render_template('customer/forbidden.html',
-                reason="Your session has ended. Thank you for dining with us!"), 403
+    if not lock:
+        print(f"⚠️ Session exists but table lock is gone — clearing session")
+        session.clear()
+        session.modified = True
+
+        # Treat this as a brand-new scan
+        existing_session_id = None
+        existing_table = None
+        token_verified = False
+        already_has_session = False
+
+    elif lock.get("session_id") != existing_session_id:
+        print(f"⚠️ Session exists but lock belongs to someone else — clearing session")
+        session.clear()
+        session.modified = True
+
+        existing_session_id = None
+        existing_table = None
+        token_verified = False
+        already_has_session = False
 
     if not already_has_session:
         token = request.args.get('token')

@@ -181,6 +181,7 @@ def place_customer_order():
         try:
             order = Order(
                 customer_name=customer_name,
+                customer_session_id=session.get("session_id"),
                 table_no=table_no,
                 total_amount=total,
                 status="Pending",
@@ -381,8 +382,7 @@ def my_orders():
     orders = (
         Order.query
         .filter_by(
-            table_no=table_no,
-            customer_name=customer_name
+            customer_session_id=session_id
         )
         .order_by(Order.created_at.desc())
         .all()
