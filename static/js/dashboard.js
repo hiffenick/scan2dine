@@ -93,3 +93,152 @@
   });
 
 })();
+
+/* ══════════════════════════════════════════
+   4. NEW ORDER MODAL
+══════════════════════════════════════════ */
+(function () {
+  const overlay    = document.getElementById('newOrderOverlay');
+  const openBtn     = document.getElementById('newOrderBtn');
+  const closeBtn    = document.getElementById('newOrderClose');
+  const cancelBtn   = document.getElementById('newOrderCancel');
+  const submitBtn   = document.getElementById('newOrderSubmit');
+  const itemsList   = document.getElementById('noItemsList');
+  const totalVal    = document.getElementById('noTotalVal');
+  const errorEl     = document.getElementById('noError');
+  const nameInput   = document.getElementById('noCustomerName');
+  const tableInput  = document.getElementById('noTableNo');
+
+  if (!overlay || !openBtn) return;
+
+  const endpoints = window.NEW_ORDER_ENDPOINTS || {};
+  let menuCache = null;
+  const qtyMap  = {};
+
+  function money(n) { return '₹' + Number(n).toFixed(2); }
+
+  function computeTotal() {
+    let total = 0;
+    if (!menuCache) return total;
+    menuCache.forEach(function (m) {
+      total += (qtyMap[m.id] || 0) * m.price;
+    });
+    return total;
+  }
+
+  function renderTotal() { totalVal.textContent = money(computeTotal()); }
+
+  function renderItems() {
+    if (!menuCache || menuCache.length === 0) {
+      itemsList.innerHTML = '<div class="no-items-empty">No active menu items found.</div>';
+      return;
+    }
+    itemsList.innerHTML = menuCache.map(function (m) {
+      const q = qtyMap[m.id] || 0;
+      return (
+        '<div class="no-item-row" data-id="' + m.id + '">' +
+          '<div class="no-item-info">' +
+            '<span class="no-item-name">' + m.name + '</span>' +
+            '<span class="no-item-price">' + money(m.price) + '</span>' +
+          '</div>' +
+          '<div class="no-item-qty">' +
+            '<button type="button" class="no-qty-btn" data-action="dec">−</button>' +
+            '<span class="no-qty-val">' + q + '</span>' +
+            '<button type="button" class="no-qty-btn" data-action="inc">+</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+  function clearError() { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+
+  function resetForm() {
+    nameInput.value = '';
+    tableInput.value = '';
+    Object.keys(qtyMap).forEach(function (k) { delete qtyMap[k]; });
+    clearError();
+    renderTotal();
+  }
+
+  function openModal() {
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    resetForm();
+
+    if (menuCache) { renderItems(); return; }
+
+    itemsList.innerHTML = '<div class="no-items-loading">Loading menu…</div>';
+    fetch(endpoints.menu)
+      .then(function (r) { return r.json(); })
+      .then(function (data) { menuCache = data; renderItems(); })
+      .catch(function () {
+        itemsList.innerHTML = '<div class="no-items-empty">Could not load menu. Try again.</div>';
+      });
+  }
+
+  function closeModal() {
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && overlay.classList.contains('visible')) closeModal();
+  });
+
+  itemsList.addEventListener('click', function (e) {
+    const btn = e.target.closest('.no-qty-btn');
+    if (!btn) return;
+    const row = btn.closest('.no-item-row');
+    const id  = row.getAttribute('data-id');
+    const cur = qtyMap[id] || 0;
+    const next = btn.getAttribute('data-action') === 'inc' ? cur + 1 : Math.max(0, cur - 1);
+    qtyMap[id] = next;
+    row.querySelector('.no-qty-val').textContent = next;
+    renderTotal();
+  });
+
+  submitBtn.addEventListener('click', function () {
+    clearError();
+
+    const customerName = nameInput.value.trim();
+    const tableNo = parseInt(tableInput.value, 10);
+    const items = Object.keys(qtyMap)
+      .filter(function (id) { return qtyMap[id] > 0; })
+      .map(function (id) { return { menu_item_id: parseInt(id, 10), qty: qtyMap[id] }; });
+
+    if (!customerName) return showError('Please enter a customer name.');
+    if (!tableNo || tableNo < 1) return showError('Please enter a valid table number.');
+    if (items.length === 0) return showError('Select at least one item.');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating…';
+
+    fetch(endpoints.create, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_name: customerName,
+        table_no: tableNo,
+        items: items,
+        status: 'Pending'
+      })
+    })
+      .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.data.success) throw new Error(res.data.message || 'Failed to create order.');
+        closeModal();
+        window.location.reload();
+      })
+      .catch(function (err) { showError(err.message || 'Something went wrong.'); })
+      .finally(function () {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Order';
+      });
+  });
+})();
