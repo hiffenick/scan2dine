@@ -433,7 +433,7 @@ async function submitOrder() {
 
 function showOrderConfirmation(orderData) {
   setText('confirmOrderId', orderData.order_id ?? '—');
-  setText('confirmTable', typeof TABLE_NUMBER !== 'undefined' ? TABLE_NUMBER : '—');
+  setText('confirmTable', orderData.table_no ?? '—');
   setText('confirmTotal', formatCurrency(orderData.total ?? 0));
   // setText('confirmPayment', getSelectedPaymentMethodName());
 

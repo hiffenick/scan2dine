@@ -64,7 +64,13 @@
 
             <p class="order-items-preview">
                 {% if order.items %}
-                    {% for item in order.items[:3] %}<strong>{{ item.quantity }}×</strong> {{ item.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if order.items | length > 3 %} +{{ order.items | length - 3 }} more{% endif %}
+                    {% for item in order.items[:3] %}
+                        <strong>{{ item.quantity }}×</strong> {{ item.menu_item.item_name }}
+                        {% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                    {% if order.items|length > 3 %}
+                        +{{ order.items|length - 3 }} more
+                    {% endif %}
                 {% else %}
                     {{ order.customer_name }}
                 {% endif %}

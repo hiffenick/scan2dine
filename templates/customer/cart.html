@@ -22,7 +22,7 @@
 
     <div class="cart-bar-mid">
         <span class="cart-bar-title">Your order</span>
-        <span class="cart-bar-table">Table {{ order_ctx.customer.table_no if order_ctx else '—' }}</span>
+        <span class="cart-bar-table">Table {{ table_number }}</span>
     </div>
 
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark mode">
@@ -183,7 +183,7 @@
 </div>
 
 <script>
-    const TABLE_NUMBER = {{ order_ctx.customer.table_no if order_ctx else 0 }};
+    const TABLE_NUMBER = {{ table_number }};
     // const PAYMENT_METHODS_ENDPOINT = '{{ url_for("cart_api.get_payment_methods") if url_for else "/api/payment-methods" }}';
 </script>
 <script src="{{ url_for('static', filename='js/customer/cart.js') }}"></script>

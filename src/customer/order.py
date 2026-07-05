@@ -240,6 +240,7 @@ def place_customer_order():
         response_payload = {
             "success": True,
             "order_id": order.id,
+            "table_no": order.table_no,
             "total": float(total),
             "items_count": len(validated_items),
             "payment_method": payment_method
