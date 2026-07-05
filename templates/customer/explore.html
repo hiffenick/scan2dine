@@ -93,51 +93,60 @@
             <p class="menu-doc-sub">Scroll through, or jump to a section from the menu on the left. Tap any dish to add it straight to your order.</p>
         </div>
 
-        <!-- ===== SPECIALS ===== -->
-        <section class="menu-section" id="section-deals">
+        <!-- ===== HOW IT WORKS (replaces former "Today's Specials") ===== -->
+        <section class="menu-section how-it-works-section" id="section-deals">
             <div class="section-head">
-                <h2>Today's specials</h2>
-                <span class="section-timer">Offer ends in <strong id="countdownTimer">12:10:09</strong></span>
+                <h2>How it works</h2>
             </div>
+            <p class="how-it-works-subtitle">Ordering takes less than a minute.</p>
 
-            <div class="deals-row">
-                <article class="deal-card">
-                    <span class="deal-cut">−15%</span>
-                    <div class="deal-emoji">🥗</div>
-                    <div class="deal-info">
-                        <h3 class="deal-name">Tomato with Tofu Salad</h3>
-                        <div class="deal-prices">
-                            <span class="deal-old">₹115.00</span>
-                            <span class="deal-new">₹97.75</span>
-                        </div>
+            <div class="how-it-works-steps">
+                <article class="how-step">
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5h16M4 12h16M4 17.5h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                     </div>
-                    <button class="deal-order" onclick="addToCart('Tomato with Tofu Salad', 97.75, 0)">Add</button>
+                    <span class="how-step-number">1</span>
+                    <h3 class="how-step-title">Browse the Menu</h3>
+                    <p class="how-step-desc">Explore dishes and tap Add on anything you'd like.</p>
                 </article>
 
-                <article class="deal-card">
-                    <span class="deal-cut">−15%</span>
-                    <div class="deal-emoji">🥟</div>
-                    <div class="deal-info">
-                        <h3 class="deal-name">Japanese Chicken Gyoza</h3>
-                        <div class="deal-prices">
-                            <span class="deal-old">₹95.00</span>
-                            <span class="deal-new">₹81.70</span>
-                        </div>
+                <div class="how-step-connector" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+
+                <article class="how-step">
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 4h2l1.6 9.6a2 2 0 0 0 2 1.7h8a2 2 0 0 0 2-1.6L21 8H7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.3" fill="currentColor"/><circle cx="17" cy="20" r="1.3" fill="currentColor"/></svg>
                     </div>
-                    <button class="deal-order" onclick="addToCart('Japanese Chicken Gyoza', 81.70, 0)">Add</button>
+                    <span class="how-step-number">2</span>
+                    <h3 class="how-step-title">Review Your Order</h3>
+                    <p class="how-step-desc">Open Your Order to adjust quantities or add notes.</p>
                 </article>
 
-                <article class="deal-card">
-                    <span class="deal-cut">−10%</span>
-                    <div class="deal-emoji">🍜</div>
-                    <div class="deal-info">
-                        <h3 class="deal-name">Thai Chicken Noodles</h3>
-                        <div class="deal-prices">
-                            <span class="deal-old">₹85.00</span>
-                            <span class="deal-new">₹76.50</span>
-                        </div>
+                <div class="how-step-connector" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+
+                <article class="how-step">
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l17-8-8 17-2-7-7-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
                     </div>
-                    <button class="deal-order" onclick="addToCart('Thai Chicken Noodles', 76.50, 0)">Add</button>
+                    <span class="how-step-number">3</span>
+                    <h3 class="how-step-title">Send to the Kitchen</h3>
+                    <p class="how-step-desc">Confirm your order and it is sent instantly to the kitchen.</p>
+                </article>
+
+                <div class="how-step-connector" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+
+                <article class="how-step">
+                    <div class="how-step-icon">
+                        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <span class="how-step-number">4</span>
+                    <h3 class="how-step-title">Track &amp; Pay</h3>
+                    <p class="how-step-desc">Track the order status in My Orders and complete payment after your meal.</p>
                 </article>
             </div>
         </section>
