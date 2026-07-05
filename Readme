@@ -9,7 +9,7 @@ While the problem statement appears simple, the primary focus of this project is
 
 ## Key Objectives
 - Implement a **real-time QR-based ordering workflow**
-- Design a **modular, scalable Flask application**
+- Design a . **modular, scalable Flask application**
 - Apply **REST API principles**
 - Ensure **security using sessions, CSRF protection, and authentication**
 - Separate **customer and admin responsibilities**
