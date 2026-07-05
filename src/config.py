@@ -11,16 +11,21 @@ class Config:
     # ==============================
     # DATABASE CONFIGURATION
     # ==============================
-    USER = os.getenv("USER")
-    SERVER = os.getenv("SERVER")
-    PASSWORD_RAW = os.getenv("PASSWORD")
-    PASSWORD = quote_plus(PASSWORD_RAW) if PASSWORD_RAW else ""
-    DB_NAME = os.getenv("DB_NAME")
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
-    SQLALCHEMY_DATABASE_URI = (
-        f"mssql+pyodbc://{USER}:{PASSWORD}@{SERVER}/{DB_NAME}"
-        "?driver=ODBC+Driver+17+for+SQL+Server"
-    )
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        USER = os.getenv("USER")
+        SERVER = os.getenv("SERVER")
+        PASSWORD_RAW = os.getenv("PASSWORD")
+        PASSWORD = quote_plus(PASSWORD_RAW) if PASSWORD_RAW else ""
+        DB_NAME = os.getenv("DB_NAME")
+
+        SQLALCHEMY_DATABASE_URI = (
+            f"mssql+pyodbc://{USER}:{PASSWORD}@{SERVER}/{DB_NAME}"
+            "?driver=ODBC+Driver+17+for+SQL+Server"
+        )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
