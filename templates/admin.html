@@ -121,7 +121,7 @@
     </svg>
     Add Dish
   </a>
-  <a href="{{ url_for('admin.all_table_qrs') }}" class="db-action-btn">
+  <a href="{{ url_for('admin.tables_page') }}" class="db-action-btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
       <rect x="3" y="14" width="7" height="7"/><rect x="14" y="17" width="3" height="3"/>
@@ -148,7 +148,7 @@
         <h2 class="db-panel__title">Recent Orders</h2>
         <p class="db-panel__sub">Latest activity from your floor</p>
       </div>
-      <a href="{{ url_for('admin.get_orders') }}" class="db-panel__link">
+      <a href="{{ url_for('admin.get_orders_page') }}" class="db-panel__link">
         View all
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
       </a>
@@ -167,7 +167,7 @@
         </thead>
         <tbody>
           {% for order in recent_orders %}
-          <tr class="db-table__row" onclick="window.location='{{ url_for('admin.order_detail', order_id=order.id) }}'" role="button" tabindex="0" aria-label="Order #{{ order.id }}">
+          <tr class="db-table__row" onclick="window.location='{{ url_for('admin.get_orders_page') }}?open={{ order.id }}'" role="button" tabindex="0" aria-label="Order #{{ order.id }}"></tr>
             <td><span class="db-table__id">#{{ order.id }}</span></td>
             <td><span class="db-table__items">{{ order.items | map(attribute='menu_item.item_name') | join(', ') }}</span></td>
             <td><span class="db-table__amount">₹{{ "%.2f"|format(order.total_amount) }}</span></td>

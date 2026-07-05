@@ -214,7 +214,7 @@ def create_order():
     customer_name = data.get("customer_name", "").strip()
     table_no = data.get("table_no")
     items = data.get("items", [])
-    status = data.get("status", "pending").lower().strip()
+    status = data.get("status", "Pending").strip().title()
     
     print(f"Customer: '{customer_name}'")
     print(f"Table: {table_no}")
@@ -231,8 +231,19 @@ def create_order():
     if not items or len(items) == 0:
         return jsonify({"success": False, "message": "At least one item is required"}), 400
     
-    if status not in ["pending", "completed", "cancelled"]:
-        return jsonify({"success": False, "message": "Invalid status"}), 400
+    VALID_STATUSES = [
+        "Pending",
+        "Preparing",
+        "Served",
+        "Closed",
+        "Cancelled"
+    ]
+
+    if status not in VALID_STATUSES:
+        return jsonify({
+            "success": False,
+            "message": "Invalid status"
+        }), 400
     
     try:
         # Calculate total and validate items
@@ -334,12 +345,12 @@ def update_order_post(order_id):
         return jsonify({"success": False, "message": "No data"}), 400
 
     items = data.get("items", [])
-    status = data.get("status", "").lower().strip()
+    status = data.get("status", "").strip().title()
 
     print(f"Items: {len(items)}")
     print(f"Status: '{status}'")
 
-    if status and status not in ["pending", "completed", "cancelled"]:
+    if status and status not in ["Pending", "Preparing", "Served", "Closed", "Cancelled"]:
         return jsonify({"success": False, "message": "Invalid status"}), 400
 
     try:
@@ -375,11 +386,11 @@ def update_order_post(order_id):
 
         if status:
             order.status = status
-            if status in ["completed", "cancelled"]:
+            if status in ["Closed", "Cancelled"]:
                 # Check no other pending orders for this table
                 pending_orders = Order.query.filter_by(
                     table_no=order.table_no,
-                    status="pending"
+                    status="Pending"
                 ).filter(Order.id != order_id).count()
 
                 if pending_orders == 0:
@@ -459,7 +470,7 @@ def create_order_form():
             customer_name=data.get("customer_name"),
             customer_phone=data.get("customer_phone"),
             table_no=data.get("table_no"),
-            status="pending"
+            status="Pending"
         )
 
         db.session.add(order)
