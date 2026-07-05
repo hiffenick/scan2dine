@@ -93,16 +93,27 @@ def get_table_lock(table_number):
         return lock_info.get("data")
 
 
+from src.services.redis_session import delete_customer_session
+
 def release_table(table_number):
-    """Called when admin marks order completed/cancelled."""
+    """Release table and delete the customer session."""
     try:
+        session_id = None
+
         with LOCK_MUTEX:
-            if table_number in TABLE_LOCKS:
+            lock = TABLE_LOCKS.get(table_number)
+
+            if lock:
+                session_id = lock["data"].get("session_id")
                 del TABLE_LOCKS[table_number]
                 print(f"🔓 Table {table_number} released")
             else:
                 print(f"ℹ️ Table {table_number} was not locked")
-    
+
+        if session_id:
+            delete_customer_session(session_id)
+            print(f"🗑️ Customer session {session_id} deleted")
+
     except Exception as e:
         print(f"⚠️ Warning: release_table failed for table {table_number}: {e}")
 

@@ -12,6 +12,7 @@ import qrcode
 from flask import current_app
 import json
 
+from src.models.paymentqr import PaymentSetting
 from src.extensions import db, csrf
 from src.models.order import Order
 from src.models.order_item import OrderItem
@@ -180,6 +181,7 @@ def place_customer_order():
         try:
             order = Order(
                 customer_name=customer_name,
+                customer_session_id=session.get("session_id"),
                 table_no=table_no,
                 total_amount=total,
                 status="Pending",
@@ -238,6 +240,7 @@ def place_customer_order():
         response_payload = {
             "success": True,
             "order_id": order.id,
+            "table_no": order.table_no,
             "total": float(total),
             "items_count": len(validated_items),
             "payment_method": payment_method
@@ -247,8 +250,10 @@ def place_customer_order():
         if payment_method == 'online':
             # Build UPI payment URI
             # Prefer DB-stored settings (admin panel) and fallback to app config
-            upi_vpa = Setting.get('UPI_VPA', current_app.config.get('UPI_VPA', 'merchant@upi'))
-            upi_name = Setting.get('UPI_MERCHANT_NAME', current_app.config.get('UPI_MERCHANT_NAME', 'Cafe'))
+            payment_setting = PaymentSetting.get()
+            upi_vpa = payment_setting.upi_id or current_app.config.get('UPI_VPA', 'merchant@upi')
+            upi_name = payment_setting.account_name or current_app.config.get('UPI_MERCHANT_NAME', 'Cafe')
+
             currency = current_app.config.get('UPI_CURRENCY', 'INR')
             note = f"Order {order.id}"
             # Format amount to two decimals without commas
@@ -378,8 +383,7 @@ def my_orders():
     orders = (
         Order.query
         .filter_by(
-            table_no=table_no,
-            customer_name=customer_name
+            customer_session_id=session_id
         )
         .order_by(Order.created_at.desc())
         .all()
@@ -389,6 +393,8 @@ def my_orders():
         "id": o.id,
         "status": o.status,
         "total_amount": float(o.total_amount),
+        "payment_status": o.payment_status,
+        "payment_method": o.payment_method,
         "created_at": o.created_at.isoformat(),
         "items": [{
             "name": oi.menu_item.item_name,
@@ -404,3 +410,104 @@ def my_orders():
         orders_json=orders_json
     )
 
+@customer_order_bp.route('/orders/<int:order_id>/upi-qr', methods=['GET'])
+@csrf.exempt
+def get_order_upi_qr(order_id):
+    """Generate UPI QR for an already-placed order (Served-stage payment)."""
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({"success": False, "error": "Order not found"}), 404
+    
+    payment_setting = PaymentSetting.get()
+    upi_vpa = payment_setting.upi_id or current_app.config.get('UPI_VPA', 'merchant@upi')
+    upi_name = payment_setting.account_name or current_app.config.get('UPI_MERCHANT_NAME', 'Cafe')
+    currency = current_app.config.get('UPI_CURRENCY', 'INR')
+    amt_str = f"{order.total_amount:.2f}"
+    note = f"Order {order.id}"
+    upi_uri = f"upi://pay?pa={upi_vpa}&pn={upi_name}&am={amt_str}&cu={currency}&tn={note}"
+
+    img = qrcode.make(upi_uri)
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    b64 = base64.b64encode(buffered.getvalue()).decode('ascii')
+
+    return jsonify({
+        "success": True,
+        "upi_uri": upi_uri,
+        "upi_qr_base64": f"data:image/png;base64,{b64}"
+    })
+
+
+@customer_order_bp.route('/orders/<int:order_id>/mark-awaiting', methods=['POST'])
+@csrf.exempt
+def mark_order_awaiting_verification(order_id):
+    """Customer clicked 'I've Paid' — flip payment_status to awaiting_verification."""
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({"success": False, "error": "Order not found"}), 404
+
+    if order.payment_status == 'unpaid':
+        order.payment_status = 'awaiting'
+        db.session.commit()
+
+    return jsonify({"success": True, "payment_status": order.payment_status})
+
+
+@customer_order_bp.route('/my-orders/status-poll', methods=['GET'])
+@csrf.exempt
+def my_orders_status_poll():
+    """Lightweight poll for status + payment_status changes (order status board, payment verification)."""
+    table_no = session.get('table_no')
+    if not table_no:
+        return jsonify({"success": False, "error": "No session"}), 403
+
+    order_ids = request.args.get('ids', '')
+    ids = [int(i) for i in order_ids.split(',') if i.isdigit()]
+    if not ids:
+        return jsonify({"success": True, "orders": []})
+
+    orders = Order.query.filter(Order.id.in_(ids)).all()
+    return jsonify({
+        "success": True,
+        "orders": [{
+            "id": o.id,
+            "status": o.status,
+            "payment_status": o.payment_status,
+            "payment_method": o.payment_method
+        } for o in orders]
+    })
+
+@customer_order_bp.route("/orders/<int:order_id>/select-payment", methods=["POST"])
+@csrf.exempt
+def select_payment_method(order_id):
+    """
+    Customer selects intended payment method on the Served-stage payment card.
+    This ONLY records intent — it never marks the order as paid.
+    Admin still verifies manually via /admin/api/orders/<id>/payment.
+    """
+    order = Order.query.get(order_id)
+    if not order:
+        return jsonify({"success": False, "error": "Order not found"}), 404
+
+    if order.status != 'Served':
+        return jsonify({"success": False, "error": "Order is not yet served"}), 400
+
+    if order.payment_status == 'paid':
+        return jsonify({"success": False, "error": "Payment already verified"}), 400
+
+    data = request.get_json(silent=True) or {}
+    method = (data.get('method') or '').strip().lower()
+
+    if method not in ('cash', 'upi'):
+        return jsonify({"success": False, "error": "Invalid payment method"}), 400
+
+    order.payment_method = method
+    order.payment_status = 'awaiting' if method == 'upi' else 'unpaid'
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "payment_method": order.payment_method,
+        "payment_status": order.payment_status
+    })

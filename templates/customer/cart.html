@@ -22,7 +22,7 @@
 
     <div class="cart-bar-mid">
         <span class="cart-bar-title">Your order</span>
-        <span class="cart-bar-table">Table {{ order_ctx.customer.table_no if order_ctx else '—' }}</span>
+        <span class="cart-bar-table">Table {{ table_number }}</span>
     </div>
 
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle light and dark mode">
@@ -51,6 +51,7 @@
             <h3>Your order is empty</h3>
             <p>Head back to the menu and tap "Add" on anything that looks good.</p>
             <a href="{{ url_for('customer_menu.explore_menu') }}" class="cart-empty-cta">Browse the menu</a>
+            <a href="{{ url_for('customer_order.my_orders') }}" class="cart-empty-cta">My Orders</a>
         </div>
 
         <!-- Add a note -->
@@ -60,8 +61,8 @@
         </div>
 
         <!-- Payment Method Section -->
-        <div class="payment-section" id="paymentSection" hidden>
-            <div class="payment-header">
+        <!-- <div class="payment-section" id="paymentSection" hidden> -->
+            <!-- <div class="payment-header">
                 <span class="payment-eyebrow">How to pay</span>
                 <h2 class="payment-title">Payment method</h2>
             </div>
@@ -71,8 +72,8 @@
             <div class="payment-loading" id="paymentLoading">
                 <div class="payment-spinner"></div>
                 <span>Loading payment options...</span>
-            </div>
-        </div>
+            </div>  -->
+        <!-- </div> -->
 
     </main>
 
@@ -165,16 +166,16 @@
                 <span class="confirm-detail-label">Total</span>
                 <span class="confirm-detail-value" id="confirmTotal">₹0.00</span>
             </div>
-            <div class="confirm-detail-row">
+            <!-- <div class="confirm-detail-row">
                 <span class="confirm-detail-label">Payment</span>
                 <span class="confirm-detail-value" id="confirmPayment">—</span>
-            </div>
+            </div> -->
         </div>
 
-        <div class="confirm-qr" id="confirmQR" hidden>
+        <!-- <div class="confirm-qr" id="confirmQR" hidden>
             <p class="confirm-qr-label">Scan to pay</p>
             <img id="confirmQRImage" src="" alt="Payment QR Code" class="confirm-qr-image">
-        </div>
+        </div> -->
 
         <a href="/customer/api/my-orders" class="confirm-cta">View my orders</a>
         <button class="confirm-secondary" id="confirmKeepBrowsing">Keep browsing the menu</button>
@@ -182,8 +183,8 @@
 </div>
 
 <script>
-    const TABLE_NUMBER = {{ order_ctx.customer.table_no if order_ctx else 0 }};
-    const PAYMENT_METHODS_ENDPOINT = '{{ url_for("cart_api.get_payment_methods") if url_for else "/api/payment-methods" }}';
+    const TABLE_NUMBER = {{ table_number }};
+    // const PAYMENT_METHODS_ENDPOINT = '{{ url_for("cart_api.get_payment_methods") if url_for else "/api/payment-methods" }}';
 </script>
 <script src="{{ url_for('static', filename='js/customer/cart.js') }}"></script>
 

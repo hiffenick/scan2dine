@@ -14,6 +14,7 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(100), nullable=False)
+    customer_session_id = db.Column(db.String(36), nullable=False, index=True)
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
     table_no = db.Column(db.Integer, nullable=False)
     payment_status = db.Column(db.String(20), nullable=False, default='unpaid')
