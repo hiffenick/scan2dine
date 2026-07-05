@@ -17,8 +17,10 @@ from . import admin_bp
 @login_required
 def generate_qr(table_number):
     port = current_app.config.get('PORT') or os.getenv('PORT', '5000')
+    base_url = os.getenv("BASE_URL").rstrip("/")
     token = generate_token(table_number)
-    static_qr_url = f"http://127.0.0.1:{port}/customer/table/{table_number}?token={token}"
+    static_qr_url = f"{base_url}/customer/table/{table_number}?token={token}"
+
     current_app.logger.info(f"Generating QR for table {table_number} -> {static_qr_url}")
 
     qr = qrcode.make(static_qr_url)
@@ -49,9 +51,9 @@ def generate_qr(table_number):
 @admin_bp.route("/api/generate-table-qr/<int:table_number>")
 @login_required
 def generate_qr_api(table_number):
-    port = current_app.config.get('PORT') or os.getenv('PORT', '5000')
+    base_url = os.getenv("BASE_URL").rstrip("/")
     token = generate_token(table_number)
-    static_qr_url = f"http://127.0.0.1:{port}/customer/table/{table_number}?token={token}"
+    static_qr_url = f"{base_url}/customer/table/{table_number}?token={token}"
     current_app.logger.info(f"Generating QR (API) for table {table_number} -> {static_qr_url}")
 
     qr = qrcode.make(static_qr_url)
